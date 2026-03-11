@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id);
 const page = document.body.dataset.page;
-const state = { model: null, drawnNodes: [] };
+const state = { model: null, drawnNodes: [], relationship: null };
 
 function svgEl(tag, attrs = {}) {
   const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -17,7 +17,7 @@ function addArrowDefs(svg) {
 }
 
 function nodeContext(label) {
-  return state.model.nodeContexts[label] || {
+  return state.model.nodeContexts?.[label] || {
     plainEnglish: `${label}: TODO: Needs review against /docs.`,
     oracleTerm: label,
     context: 'TODO: Needs review'
@@ -63,7 +63,7 @@ function drawNode(svg, node, sx = 10, sy = 10, w = 150, h = 42) {
   const y = node.y * sy - h / 2;
   const group = inferGroup(node);
   const g = svgEl('g', { class: `node-group ${group}`, transform: `translate(${x},${y})`, tabindex: '0', 'data-label': node.label, role: 'button', 'aria-label': `Node ${node.label}` });
-  g.append(svgEl('rect', { class: 'node-rect', width: w, height: h, rx: 8, ry: 8 }));
+  g.append(svgEl('rect', { class: 'node-rect', width: w, height: h, rx: 10, ry: 10 }));
   const t = svgEl('text', { class: 'node-label', x: w / 2, y: h / 2 });
   node.label.split(' / ').forEach((part, i) => {
     const span = svgEl('tspan', { x: w / 2, dy: i === 0 ? 0 : 12 });
@@ -147,15 +147,145 @@ function renderTroubleshooting() {
   attachSearch();
 }
 
+function drawCurvedEdge(svg, from, to, id) {
+  const midX = (from.x + to.x) / 2;
+  const d = `M ${from.x} ${from.y} C ${midX} ${from.y}, ${midX} ${to.y}, ${to.x} ${to.y}`;
+  const path = svgEl('path', { class: 'edge relationship-edge', d, 'data-edge-id': id, 'marker-end': 'url(#arrow)' });
+  svg.appendChild(path);
+  return path;
+}
+
+function setRelationshipFocus(activeNodeId) {
+  const rel = state.relationship;
+  if (!rel) return;
+  const connected = new Set([activeNodeId]);
+  rel.edges.forEach(e => {
+    if (e.from === activeNodeId || e.to === activeNodeId) {
+      connected.add(e.from);
+      connected.add(e.to);
+    }
+  });
+
+  rel.nodeEls.forEach((el, id) => {
+    el.classList.toggle('faded', activeNodeId && !connected.has(id));
+  });
+  rel.edgeEls.forEach(({ from, to, el }) => {
+    const isConnected = activeNodeId && (from === activeNodeId || to === activeNodeId);
+    el.classList.toggle('edge-highlight', Boolean(isConnected));
+    el.classList.toggle('faded', Boolean(activeNodeId && !isConnected));
+  });
+}
+
+function bindRelationshipControls() {
+  const rel = state.relationship;
+  if (!rel) return;
+  const viewport = $('relationship-viewport');
+  const zoomValue = $('zoom-value');
+  const setZoom = next => {
+    rel.zoom = Math.min(1.8, Math.max(0.55, next));
+    viewport.style.transform = `scale(${rel.zoom})`;
+    if (zoomValue) zoomValue.textContent = `${Math.round(rel.zoom * 100)}%`;
+  };
+
+  $('zoom-in')?.addEventListener('click', () => setZoom(rel.zoom + 0.1));
+  $('zoom-out')?.addEventListener('click', () => setZoom(rel.zoom - 0.1));
+  $('zoom-reset')?.addEventListener('click', () => setZoom(1));
+
+  document.querySelectorAll('[data-filter-group]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.dataset.filterGroup;
+      document.querySelectorAll('[data-filter-group]').forEach(b => b.classList.toggle('active', b === btn));
+      rel.nodeEls.forEach(el => {
+        const show = group === 'all' || el.classList.contains(group);
+        el.classList.toggle('hidden-node', !show);
+      });
+      rel.edgeEls.forEach(({ from, to, el }) => {
+        const fromEl = rel.nodeEls.get(from);
+        const toEl = rel.nodeEls.get(to);
+        const show = !fromEl.classList.contains('hidden-node') && !toEl.classList.contains('hidden-node');
+        el.classList.toggle('hidden-edge', !show);
+      });
+    });
+  });
+
+  $('tour-next')?.addEventListener('click', () => {
+    rel.tourIndex = (rel.tourIndex + 1) % rel.tour.length;
+    const nodeId = rel.tour[rel.tourIndex];
+    rel.nodeEls.get(nodeId)?.dispatchEvent(new Event('click'));
+  });
+
+  setZoom(1);
+}
+
 function renderRelationships() {
   state.drawnNodes = [];
   const svg = $('relationship-svg'); svg.innerHTML = ''; addArrowDefs(svg);
-  const nodes = [
-    { id: 'a1', label: 'Worker / Manager / Device', x: 105, y: 25 }, { id: 'a2', label: 'Time Entry Experience', x: 105, y: 75 }, { id: 'a3', label: '3rd Party Device / Load', x: 90, y: 130 }, { id: 'a4', label: 'Web Clock', x: 103, y: 130 }, { id: 'a5', label: 'Calendar', x: 115, y: 130 }, { id: 'a6', label: 'Time Card', x: 127, y: 130 }, { id: 'a7', label: 'Entered Time Data', x: 105, y: 175 }, { id: 'a8', label: 'Rules Engine', x: 40, y: 245 }, { id: 'a9', label: 'Worker Time Processing Profile', x: 100, y: 245 }, { id: 'a10', label: 'Worker Time Entry Profile', x: 145, y: 245 }, { id: 'a11', label: 'Time Attributes', x: 185, y: 245 }, { id: 'a12', label: 'HCM Groups', x: 185, y: 205 }, { id: 'a13', label: 'Time Card Fields', x: 185, y: 300 }, { id: 'a14', label: 'Layout Components / Layout Sets', x: 180, y: 360 }, { id: 'a15', label: 'Validation Rules', x: 72, y: 300 }, { id: 'a16', label: 'Calculation Rules', x: 55, y: 300 }, { id: 'a17', label: 'Time Consumer Set', x: 120, y: 300 }, { id: 'a18', label: 'Payroll', x: 145, y: 360 }, { id: 'a19', label: 'Project Costing', x: 125, y: 360 }, { id: 'a20', label: 'Project Execution Mgmt', x: 80, y: 360 }, { id: 'a21', label: 'Transfer Status', x: 20, y: 450 }, { id: 'a22', label: 'Payroll Transfer', x: 42, y: 500 }, { id: 'a23', label: 'Project Costing Transfer', x: 22, y: 500 }, { id: 'a24', label: 'Other External Uses', x: 2, y: 500 }
+  const viewport = $('relationship-viewport');
+  if (viewport) viewport.style.transform = 'scale(1)';
+
+  const layerBands = [
+    { label: 'Experience Layer (capture)', x: 60, y: 60, width: 2280, height: 260, className: 'runtime-band' },
+    { label: 'Policy Layer (classify + validate + approve)', x: 60, y: 360, width: 2280, height: 390, className: 'setup-band' },
+    { label: 'Consumer Layer (transfer + use)', x: 60, y: 790, width: 2280, height: 300, className: 'consumer-band' }
   ];
+  layerBands.forEach(b => {
+    svg.appendChild(svgEl('rect', { class: `band ${b.className}`, x: b.x, y: b.y, width: b.width, height: b.height, rx: 18 }));
+    const text = svgEl('text', { class: 'band-label', x: b.x + 20, y: b.y + 34, 'text-anchor': 'start' });
+    text.textContent = b.label;
+    svg.appendChild(text);
+  });
+
+  const nodes = [
+    { id: 'a1', label: 'Worker / Manager / Device', x: 440, y: 130, group: 'runtime' },
+    { id: 'a2', label: 'Time Entry Experience', x: 1140, y: 130, group: 'runtime' },
+    { id: 'a3', label: '3rd Party Device / Load', x: 560, y: 250, group: 'runtime' },
+    { id: 'a4', label: 'Web Clock', x: 930, y: 250, group: 'runtime' },
+    { id: 'a5', label: 'Calendar', x: 1310, y: 250, group: 'runtime' },
+    { id: 'a6', label: 'Time Card', x: 1700, y: 250, group: 'runtime' },
+    { id: 'a7', label: 'Entered Time Data', x: 1140, y: 420, group: 'runtime' },
+    { id: 'a8', label: 'Rules Engine', x: 500, y: 540, group: 'setup' },
+    { id: 'a9', label: 'Worker Time Processing Profile', x: 1030, y: 540, group: 'setup' },
+    { id: 'a10', label: 'Worker Time Entry Profile', x: 1500, y: 540, group: 'setup' },
+    { id: 'a11', label: 'Time Attributes', x: 1980, y: 480, group: 'setup' },
+    { id: 'a12', label: 'HCM Groups', x: 1980, y: 600, group: 'setup' },
+    { id: 'a13', label: 'Time Card Fields', x: 1980, y: 720, group: 'setup' },
+    { id: 'a14', label: 'Layout Components / Layout Sets', x: 1500, y: 720, group: 'setup' },
+    { id: 'a15', label: 'Validation Rules', x: 360, y: 680, group: 'setup' },
+    { id: 'a16', label: 'Calculation Rules', x: 680, y: 680, group: 'setup' },
+    { id: 'a17', label: 'Time Consumer Set', x: 1030, y: 680, group: 'consumer' },
+    { id: 'a18', label: 'Payroll', x: 1680, y: 900, group: 'consumer' },
+    { id: 'a19', label: 'Project Costing', x: 1200, y: 900, group: 'consumer' },
+    { id: 'a20', label: 'Project Execution Mgmt', x: 760, y: 900, group: 'consumer' },
+    { id: 'a21', label: 'Transfer Status', x: 360, y: 900, group: 'consumer' },
+    { id: 'a22', label: 'Payroll Transfer', x: 260, y: 1030, group: 'consumer' },
+    { id: 'a23', label: 'Project Costing Transfer', x: 520, y: 1030, group: 'consumer' },
+    { id: 'a24', label: 'Other External Uses', x: 760, y: 1030, group: 'consumer' }
+  ];
+
+  const edges = [['a1','a2'],['a2','a3'],['a2','a4'],['a2','a5'],['a2','a6'],['a3','a7'],['a4','a7'],['a5','a7'],['a6','a7'],['a7','a8'],['a7','a9'],['a7','a10'],['a8','a15'],['a8','a16'],['a9','a17'],['a10','a17'],['a11','a13'],['a13','a14'],['a12','a10'],['a10','a14'],['a17','a18'],['a17','a19'],['a17','a20'],['a8','a21'],['a21','a22'],['a21','a23'],['a21','a24']].map(([from,to]) => ({ from, to }));
   const by = Object.fromEntries(nodes.map(n => [n.id, n]));
-  [['a1','a2'],['a2','a3'],['a2','a4'],['a2','a5'],['a2','a6'],['a3','a7'],['a4','a7'],['a5','a7'],['a6','a7'],['a7','a8'],['a7','a9'],['a7','a10'],['a8','a15'],['a8','a16'],['a9','a17'],['a10','a17'],['a11','a13'],['a13','a14'],['a12','a10'],['a10','a14'],['a17','a18'],['a17','a19'],['a17','a20'],['a8','a21'],['a21','a22'],['a21','a23'],['a21','a24']].forEach(([a,b]) => drawEdge(svg, by[a], by[b], 10, 1));
-  nodes.forEach(n => drawNode(svg, n, 10, 1, 160, 34));
+
+  const edgeEls = edges.map((e, index) => ({ ...e, el: drawCurvedEdge(svg, by[e.from], by[e.to], `edge-${index}`) }));
+
+  const nodeEls = new Map();
+  nodes.forEach(n => {
+    drawNode(svg, n, 1, 1, 270, 72);
+    const current = state.drawnNodes[state.drawnNodes.length - 1];
+    current.dataset.nodeId = n.id;
+    current.addEventListener('click', () => setRelationshipFocus(n.id));
+    nodeEls.set(n.id, current);
+  });
+
+  state.relationship = {
+    zoom: 1,
+    edges,
+    edgeEls,
+    nodeEls,
+    tour: ['a1', 'a2', 'a7', 'a9', 'a17', 'a18', 'a19', 'a21'],
+    tourIndex: -1
+  };
+
+  bindRelationshipControls();
   attachSearch();
 }
 
