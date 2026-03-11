@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTL Mental Model Home</title>
+  <link rel="stylesheet" href="src/css/styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1>Oracle Time and Labor Mental Model</h1>
+    <p id="source-warning" class="warning"></p>
+    <nav class="tabs">
+      <a class="active" href="index.html">Home</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="lifecycle.html">Lifecycle</a>
+      <a href="relationships.html">Relationships</a>
+      <a href="troubleshooting.html">Troubleshooting</a>
+    </nav>
+  </header>
+  <main>
+    <section class="panel"><h2>Overview</h2><div id="overview-cards" class="overview-cards"></div></section>
+    <section class="panel split">
+      <div>
+        <h2>Glossary</h2>
+        <div id="glossary-list" class="glossary-list"></div>
+      </div>
+      <div>
+        <h2>How to use this site</h2>
+        <p>Open each page to explore an interactive diagram. Hover any node for a quick definition and click it for full context.</p>
+        <p>Any uncertain concept is labeled <strong>Needs review</strong>.</p>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="src/js/home.js"></script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+{
+  "meta": {
+    "title": "Oracle Time and Labor Mental Model",
+    "sourceStatus": "Repository docs folder not found. Content based on provided reference diagrams and marked Needs review for documentation alignment.",
+    "sourceOfTruth": "TODO: Needs review against /docs markdown files"
+  },
+  "objects": [
+    {
+      "id": "hcm-groups",
+      "name": "HCM Groups",
+      "oracleTerm": "HCM Groups",
+      "definition": "Grouping context used to determine the worker's setup path.",
+      "purpose": "Helps select profile behavior by worker context.",
+      "flowFit": "Setup",
+      "commonMistakes": ["Wrong group assignment", "Group criteria not maintained"],
+      "relatedObjects": ["time-entry-profiles"]
+    },
+    {
+      "id": "time-entry-profiles",
+      "name": "Time Entry Profiles",
+      "oracleTerm": "Time Entry Profile",
+      "definition": "Controls who enters time and what entry UI appears.",
+      "purpose": "Determines entry experience and links to processing behavior.",
+      "flowFit": "Setup + Runtime",
+      "commonMistakes": ["Profile assigned to wrong audience", "Layout mismatch"],
+      "relatedObjects": ["layout-components", "time-processing-profiles"]
+    },
+    {
+      "id": "time-processing-profiles",
+      "name": "Time Processing Profiles",
+      "oracleTerm": "Time Processing Profile",
+      "definition": "Applies validation, calculations, and transfer/approval context.",
+      "purpose": "Converts entered time into governed, transferable outcomes.",
+      "flowFit": "Setup + Runtime",
+      "commonMistakes": ["Wrong period context", "Consumer logic mismatch"],
+      "relatedObjects": ["validation-calculation-rules", "time-consumer-sets"]
+    },
+    {
+      "id": "validation-calculation-rules",
+      "name": "Validation / Calculation Rules",
+      "oracleTerm": "Validation Rules / Calculation Rules",
+      "definition": "Rule logic that checks and computes time outcomes.",
+      "purpose": "Data quality checks and derived-time calculations.",
+      "flowFit": "Runtime",
+      "commonMistakes": ["Unexpected rule firing", "Missing criteria"],
+      "relatedObjects": ["time-processing-profiles"]
+    },
+    {
+      "id": "time-attributes",
+      "name": "Time Attributes",
+      "oracleTerm": "Time Attributes",
+      "definition": "Attributes that classify entered time.",
+      "purpose": "Feed field behavior and downstream logic.",
+      "flowFit": "Setup",
+      "commonMistakes": ["Attributes missing", "Attribute-to-field mismatch"],
+      "relatedObjects": ["time-card-fields"]
+    },
+    {
+      "id": "time-card-fields",
+      "name": "Time Card Fields",
+      "oracleTerm": "Time Card Fields",
+      "definition": "Data fields shown during entry.",
+      "purpose": "Capture input for validation, calculation, and transfer.",
+      "flowFit": "Setup + Runtime",
+      "commonMistakes": ["Field hidden unexpectedly", "Field values not mapped"],
+      "relatedObjects": ["layout-components"]
+    },
+    {
+      "id": "layout-components",
+      "name": "Layout Components / Sets",
+      "oracleTerm": "Layout Components / Layout Sets",
+      "definition": "Screen structure for fields/buttons.",
+      "purpose": "Controls entry UI composition.",
+      "flowFit": "Setup",
+      "commonMistakes": ["Wrong layout version", "Missing button/field"],
+      "relatedObjects": ["time-entry-profiles"]
+    },
+    {
+      "id": "time-consumer-sets",
+      "name": "Time Consumer Sets",
+      "oracleTerm": "Time Consumer Set",
+      "definition": "Defines who consumes processed time.",
+      "purpose": "Routes transfer-ready time to payroll/projects/external.",
+      "flowFit": "Setup + Downstream",
+      "commonMistakes": ["Consumer missing", "Routing not aligned"],
+      "relatedObjects": ["time-categories"]
+    },
+    {
+      "id": "time-categories",
+      "name": "Time Categories",
+      "oracleTerm": "Time Categories",
+      "definition": "Classification for consumer logic.",
+      "purpose": "Supports consumer set behavior.",
+      "flowFit": "Setup",
+      "commonMistakes": ["Category overlap", "Category not linked"],
+      "relatedObjects": ["time-consumer-sets"]
+    },
+    {
+      "id": "repeating-time-periods",
+      "name": "Repeating Time Periods",
+      "oracleTerm": "Repeating Time Period",
+      "definition": "Recurring period definition for processing context.",
+      "purpose": "Defines periodic frame used in processing profile logic.",
+      "flowFit": "Setup",
+      "commonMistakes": ["Incorrect boundaries", "Wrong periodicity"],
+      "relatedObjects": ["time-processing-profiles"]
+    }
+  ],
+  "relationships": [
+    {"from":"time-attributes","to":"time-card-fields","type":"feeds"},
+    {"from":"time-card-fields","to":"layout-components","type":"renders_in"},
+    {"from":"layout-components","to":"time-entry-profiles","type":"configured_by"},
+    {"from":"hcm-groups","to":"time-entry-profiles","type":"drives_assignment"},
+    {"from":"time-entry-profiles","to":"time-processing-profiles","type":"links_to"},
+    {"from":"repeating-time-periods","to":"time-processing-profiles","type":"scopes"},
+    {"from":"time-categories","to":"time-consumer-sets","type":"supports"},
+    {"from":"time-consumer-sets","to":"validation-calculation-rules","type":"context_for"},
+    {"from":"validation-calculation-rules","to":"time-processing-profiles","type":"executes_under"}
+  ],
+  "lifecycleStages": [
+    "Person records time",
+    "OTL captures entry",
+    "Attributes classify the entry",
+    "Layout/profile context determines allowed structure",
+    "Validation rules check it",
+    "Calculation rules derive more time",
+    "Processing profile applies consumer logic",
+    "Approval routing occurs if required",
+    "Transfer status becomes ready",
+    "Payroll / Projects / External transfer"
+  ],
+  "troubleshootingBranches": [
+    "Who is the worker?",
+    "Which HCM Group applies?",
+    "Which Time Entry Profile?",
+    "Which layout/fields/buttons appear?",
+    "Which Time Processing Profile?",
+    "Which consumer set / time categories?",
+    "Which validation/calc rules fire?",
+    "What approval status exists?",
+    "What transfer status/failure exists?"
+  ],
+  "glossary": [
+    {"term":"Entry experience","oracleTerm":"Time Entry Experience","definition":"Where users capture time (time card, web clock, calendar, device load)."},
+    {"term":"Rule execution","oracleTerm":"Validation / Calculation Rules","definition":"Checks and computations that process entered time."},
+    {"term":"Transfer readiness","oracleTerm":"Transfer Status","definition":"Indicates whether processed time can be consumed downstream."}
+  ],
+  "diagrams": {
+    "architecture": {
+      "viewBox": "0 0 1400 1200",
+      "bands": [
+        {"label":"Setup / Design","x":10,"y":10,"w":1380,"h":460},
+        {"label":"Runtime / Daily Use","x":55,"y":530,"w":1290,"h":520},
+        {"label":"Consumers","x":150,"y":1085,"w":1100,"h":100}
+      ],
+      "nodes": [
+        {"id":"a1","label":"Time Attributes","x":430,"y":90,"objectId":"time-attributes"},
+        {"id":"a2","label":"Time Card Fields","x":430,"y":200,"objectId":"time-card-fields"},
+        {"id":"a3","label":"Layout Components / Sets","x":430,"y":310,"objectId":"layout-components"},
+        {"id":"a4","label":"HCM Groups","x":190,"y":310,"objectId":"hcm-groups"},
+        {"id":"a5","label":"Time Entry Profiles","x":310,"y":430,"objectId":"time-entry-profiles"},
+        {"id":"a6","label":"Repeating Time Periods","x":700,"y":310,"objectId":"repeating-time-periods"},
+        {"id":"a7","label":"Time Processing Profiles","x":700,"y":430,"objectId":"time-processing-profiles"},
+        {"id":"a8","label":"Time Categories","x":1140,"y":200,"objectId":"time-categories"},
+        {"id":"a9","label":"Time Consumer Sets","x":1140,"y":310,"objectId":"time-consumer-sets"},
+        {"id":"a10","label":"Validation / Calculation Rules","x":1050,"y":430,"objectId":"validation-calculation-rules"},
+        {"id":"a11","label":"Worker enters time","x":310,"y":620,"context":"Runtime action in entry experience"},
+        {"id":"a12","label":"System validates","x":650,"y":730,"objectId":"validation-calculation-rules"},
+        {"id":"a13","label":"System calculates","x":830,"y":840,"objectId":"validation-calculation-rules"},
+        {"id":"a14","label":"Manager reviews / approves","x":830,"y":930,"context":"Approval path if required"},
+        {"id":"a15","label":"Time becomes transferable","x":830,"y":1020,"context":"Transfer-ready state"},
+        {"id":"a16","label":"Global Payroll","x":260,"y":1135,"context":"Downstream consumer"},
+        {"id":"a17","label":"Project Costing","x":520,"y":1135,"context":"Downstream consumer"},
+        {"id":"a18","label":"Project Execution Mgmt","x":790,"y":1135,"context":"Downstream consumer"},
+        {"id":"a19","label":"External systems","x":1080,"y":1135,"context":"Downstream consumer"}
+      ],
+      "edges": [["a1","a2"],["a2","a3"],["a3","a5"],["a4","a5"],["a4","a7"],["a6","a7"],["a8","a9"],["a9","a10"],["a9","a7"],["a10","a7"],["a5","a11"],["a11","a12"],["a7","a12"],["a10","a12"],["a12","a13"],["a10","a13"],["a13","a14"],["a14","a15"],["a15","a16"],["a15","a17"],["a15","a18"],["a15","a19"]]
+    },
+    "lifecycle": {
+      "viewBox": "0 0 2200 180"
+    },
+    "troubleshooting": {
+      "viewBox": "0 0 700 2050"
+    },
+    "relationships": {
+      "viewBox": "0 0 2200 760"
+    }
+  }
+}
