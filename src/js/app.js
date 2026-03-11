@@ -210,6 +210,76 @@ function bindRelationshipControls() {
   setZoom(1);
 }
 
+function drawCurvedEdge(svg, from, to, id) {
+  const midX = (from.x + to.x) / 2;
+  const d = `M ${from.x} ${from.y} C ${midX} ${from.y}, ${midX} ${to.y}, ${to.x} ${to.y}`;
+  const path = svgEl('path', { class: 'edge relationship-edge', d, 'data-edge-id': id, 'marker-end': 'url(#arrow)' });
+  svg.appendChild(path);
+  return path;
+}
+
+function setRelationshipFocus(activeNodeId) {
+  const rel = state.relationship;
+  if (!rel) return;
+  const connected = new Set([activeNodeId]);
+  rel.edges.forEach(e => {
+    if (e.from === activeNodeId || e.to === activeNodeId) {
+      connected.add(e.from);
+      connected.add(e.to);
+    }
+  });
+
+  rel.nodeEls.forEach((el, id) => {
+    el.classList.toggle('faded', activeNodeId && !connected.has(id));
+  });
+  rel.edgeEls.forEach(({ from, to, el }) => {
+    const isConnected = activeNodeId && (from === activeNodeId || to === activeNodeId);
+    el.classList.toggle('edge-highlight', Boolean(isConnected));
+    el.classList.toggle('faded', Boolean(activeNodeId && !isConnected));
+  });
+}
+
+function bindRelationshipControls() {
+  const rel = state.relationship;
+  if (!rel) return;
+  const viewport = $('relationship-viewport');
+  const zoomValue = $('zoom-value');
+  const setZoom = next => {
+    rel.zoom = Math.min(1.8, Math.max(0.55, next));
+    viewport.style.transform = `scale(${rel.zoom})`;
+    if (zoomValue) zoomValue.textContent = `${Math.round(rel.zoom * 100)}%`;
+  };
+
+  $('zoom-in')?.addEventListener('click', () => setZoom(rel.zoom + 0.1));
+  $('zoom-out')?.addEventListener('click', () => setZoom(rel.zoom - 0.1));
+  $('zoom-reset')?.addEventListener('click', () => setZoom(1));
+
+  document.querySelectorAll('[data-filter-group]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.dataset.filterGroup;
+      document.querySelectorAll('[data-filter-group]').forEach(b => b.classList.toggle('active', b === btn));
+      rel.nodeEls.forEach(el => {
+        const show = group === 'all' || el.classList.contains(group);
+        el.classList.toggle('hidden-node', !show);
+      });
+      rel.edgeEls.forEach(({ from, to, el }) => {
+        const fromEl = rel.nodeEls.get(from);
+        const toEl = rel.nodeEls.get(to);
+        const show = !fromEl.classList.contains('hidden-node') && !toEl.classList.contains('hidden-node');
+        el.classList.toggle('hidden-edge', !show);
+      });
+    });
+  });
+
+  $('tour-next')?.addEventListener('click', () => {
+    rel.tourIndex = (rel.tourIndex + 1) % rel.tour.length;
+    const nodeId = rel.tour[rel.tourIndex];
+    rel.nodeEls.get(nodeId)?.dispatchEvent(new Event('click'));
+  });
+
+  setZoom(1);
+}
+
 function renderRelationships() {
   state.drawnNodes = [];
   const svg = $('relationship-svg'); svg.innerHTML = ''; addArrowDefs(svg);
