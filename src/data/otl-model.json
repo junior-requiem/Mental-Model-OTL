@@ -1,121 +1,237 @@
 {
   "meta": {
     "title": "Oracle Time and Labor Mental Model",
-    "sourceStatus": "Repository docs folder not found. Content based on provided reference diagrams and marked Needs review for documentation alignment.",
-    "sourceOfTruth": "TODO: Needs review against /docs markdown files"
+    "sourceStatus": "Repository /docs not found. Model populated from user-provided reference diagrams and marked Needs review for docs alignment.",
+    "validationNote": "TODO: Needs review against markdown files in /docs when available"
   },
   "objects": [
     {
       "id": "hcm-groups",
       "name": "HCM Groups",
       "oracleTerm": "HCM Groups",
-      "definition": "Grouping context used to determine the worker's setup path.",
-      "purpose": "Helps select profile behavior by worker context.",
-      "flowFit": "Setup",
-      "commonMistakes": ["Wrong group assignment", "Group criteria not maintained"],
-      "relatedObjects": ["time-entry-profiles"]
+      "definition": "Grouping context that helps determine the worker's time entry setup.",
+      "purpose": "Connects workers to relevant time entry profile behavior.",
+      "flowFit": "Setup / Design",
+      "commonMistakes": [
+        "Worker assigned to the wrong group.",
+        "Group setup not aligned with profile expectations."
+      ],
+      "relatedObjects": [
+        "time-entry-profile"
+      ]
     },
     {
-      "id": "time-entry-profiles",
+      "id": "time-entry-profile",
       "name": "Time Entry Profiles",
-      "oracleTerm": "Time Entry Profile",
-      "definition": "Controls who enters time and what entry UI appears.",
-      "purpose": "Determines entry experience and links to processing behavior.",
-      "flowFit": "Setup + Runtime",
-      "commonMistakes": ["Profile assigned to wrong audience", "Layout mismatch"],
-      "relatedObjects": ["layout-components", "time-processing-profiles"]
+      "oracleTerm": "Time Entry Profiles",
+      "definition": "Controls who enters time and which fields/buttons/layout components appear.",
+      "purpose": "Shapes the capture experience and links to processing profile behavior.",
+      "flowFit": "Setup and Runtime",
+      "commonMistakes": [
+        "Profile not mapped to the right people.",
+        "Layout components missing expected fields/buttons."
+      ],
+      "relatedObjects": [
+        "hcm-groups",
+        "layout-components",
+        "time-processing-profile"
+      ]
     },
     {
-      "id": "time-processing-profiles",
+      "id": "time-processing-profile",
       "name": "Time Processing Profiles",
-      "oracleTerm": "Time Processing Profile",
-      "definition": "Applies validation, calculations, and transfer/approval context.",
-      "purpose": "Converts entered time into governed, transferable outcomes.",
-      "flowFit": "Setup + Runtime",
-      "commonMistakes": ["Wrong period context", "Consumer logic mismatch"],
-      "relatedObjects": ["validation-calculation-rules", "time-consumer-sets"]
+      "oracleTerm": "Time Processing Profiles",
+      "definition": "Controls validation, calculation, approval/transfer context, and consumer logic.",
+      "purpose": "Determines how entered time is processed into transfer-ready outcomes.",
+      "flowFit": "Setup and Runtime",
+      "commonMistakes": [
+        "Wrong repeating period or consumer set.",
+        "Processing profile does not match time entry profile intent."
+      ],
+      "relatedObjects": [
+        "repeating-time-periods",
+        "time-consumer-sets",
+        "validation-calc-rules"
+      ]
     },
     {
-      "id": "validation-calculation-rules",
+      "id": "validation-calc-rules",
       "name": "Validation / Calculation Rules",
-      "oracleTerm": "Validation Rules / Calculation Rules",
-      "definition": "Rule logic that checks and computes time outcomes.",
-      "purpose": "Data quality checks and derived-time calculations.",
-      "flowFit": "Runtime",
-      "commonMistakes": ["Unexpected rule firing", "Missing criteria"],
-      "relatedObjects": ["time-processing-profiles"]
-    },
-    {
-      "id": "time-attributes",
-      "name": "Time Attributes",
-      "oracleTerm": "Time Attributes",
-      "definition": "Attributes that classify entered time.",
-      "purpose": "Feed field behavior and downstream logic.",
-      "flowFit": "Setup",
-      "commonMistakes": ["Attributes missing", "Attribute-to-field mismatch"],
-      "relatedObjects": ["time-card-fields"]
-    },
-    {
-      "id": "time-card-fields",
-      "name": "Time Card Fields",
-      "oracleTerm": "Time Card Fields",
-      "definition": "Data fields shown during entry.",
-      "purpose": "Capture input for validation, calculation, and transfer.",
-      "flowFit": "Setup + Runtime",
-      "commonMistakes": ["Field hidden unexpectedly", "Field values not mapped"],
-      "relatedObjects": ["layout-components"]
-    },
-    {
-      "id": "layout-components",
-      "name": "Layout Components / Sets",
-      "oracleTerm": "Layout Components / Layout Sets",
-      "definition": "Screen structure for fields/buttons.",
-      "purpose": "Controls entry UI composition.",
-      "flowFit": "Setup",
-      "commonMistakes": ["Wrong layout version", "Missing button/field"],
-      "relatedObjects": ["time-entry-profiles"]
+      "oracleTerm": "Validation / Calculation Rules",
+      "definition": "Rules that validate time and drive calculations such as derived time/premium/overtime.",
+      "purpose": "Enforces quality and computes process outcomes.",
+      "flowFit": "Setup and Runtime",
+      "commonMistakes": [
+        "Rules fire in unexpected order.",
+        "Required conditions are incomplete."
+      ],
+      "relatedObjects": [
+        "time-processing-profile",
+        "rules-engine"
+      ]
     },
     {
       "id": "time-consumer-sets",
       "name": "Time Consumer Sets",
       "oracleTerm": "Time Consumer Set",
-      "definition": "Defines who consumes processed time.",
-      "purpose": "Routes transfer-ready time to payroll/projects/external.",
-      "flowFit": "Setup + Downstream",
-      "commonMistakes": ["Consumer missing", "Routing not aligned"],
-      "relatedObjects": ["time-categories"]
+      "definition": "Defines consumer destinations/contexts for processed time.",
+      "purpose": "Routes processed time to payroll, projects, and other consumers.",
+      "flowFit": "Setup and Downstream",
+      "commonMistakes": [
+        "Consumer mapping is incomplete.",
+        "Expected target system missing."
+      ],
+      "relatedObjects": [
+        "time-categories",
+        "consumers"
+      ]
     },
     {
       "id": "time-categories",
       "name": "Time Categories",
       "oracleTerm": "Time Categories",
-      "definition": "Classification for consumer logic.",
-      "purpose": "Supports consumer set behavior.",
-      "flowFit": "Setup",
-      "commonMistakes": ["Category overlap", "Category not linked"],
-      "relatedObjects": ["time-consumer-sets"]
+      "definition": "Grouping/classification used with consumer logic.",
+      "purpose": "Supports consumer selection and context.",
+      "flowFit": "Setup / Design",
+      "commonMistakes": [
+        "Category definitions too broad.",
+        "Category not linked where expected."
+      ],
+      "relatedObjects": [
+        "time-consumer-sets"
+      ]
+    },
+    {
+      "id": "time-attributes",
+      "name": "Time Attributes",
+      "oracleTerm": "Time Attributes",
+      "definition": "Attributes used to classify and structure time entry.",
+      "purpose": "Feeds time card fields and structure logic.",
+      "flowFit": "Setup / Design",
+      "commonMistakes": [
+        "Custom attributes not mapped to fields.",
+        "Attributes conflict with layout intent."
+      ],
+      "relatedObjects": [
+        "time-card-fields",
+        "layout-components"
+      ]
+    },
+    {
+      "id": "time-card-fields",
+      "name": "Time Card Fields",
+      "oracleTerm": "Time Card Fields",
+      "definition": "Fields shown to the worker/manager during entry.",
+      "purpose": "Collects input used by downstream validation and calculations.",
+      "flowFit": "Setup and Runtime",
+      "commonMistakes": [
+        "Field not visible when needed.",
+        "Field setup not aligned with attribute design."
+      ],
+      "relatedObjects": [
+        "layout-components",
+        "time-entry-profile"
+      ]
+    },
+    {
+      "id": "layout-components",
+      "name": "Layout Components / Sets",
+      "oracleTerm": "Layout Components / Layout Sets",
+      "definition": "Defines what layout elements, fields, and buttons appear.",
+      "purpose": "Controls entry UI behavior based on profile context.",
+      "flowFit": "Setup / Design",
+      "commonMistakes": [
+        "Wrong layout assigned to profile.",
+        "Buttons/fields missing for a use case."
+      ],
+      "relatedObjects": [
+        "time-entry-profile",
+        "time-card-fields"
+      ]
     },
     {
       "id": "repeating-time-periods",
       "name": "Repeating Time Periods",
       "oracleTerm": "Repeating Time Period",
-      "definition": "Recurring period definition for processing context.",
-      "purpose": "Defines periodic frame used in processing profile logic.",
-      "flowFit": "Setup",
-      "commonMistakes": ["Incorrect boundaries", "Wrong periodicity"],
-      "relatedObjects": ["time-processing-profiles"]
+      "definition": "Defines recurring period context for processing.",
+      "purpose": "Supports processing profile behavior and timing context.",
+      "flowFit": "Setup / Design",
+      "commonMistakes": [
+        "Wrong period frequency.",
+        "Period boundaries do not match expected cycles."
+      ],
+      "relatedObjects": [
+        "time-processing-profile"
+      ]
+    },
+    {
+      "id": "consumers",
+      "name": "Consumers",
+      "oracleTerm": "Payroll / Projects / External systems",
+      "definition": "Downstream consumers of transfer-ready time.",
+      "purpose": "Uses approved and transfer-ready time for payroll, costing, and integrations.",
+      "flowFit": "Downstream",
+      "commonMistakes": [
+        "Transfer status not ready.",
+        "Consumer integration mapping mismatch."
+      ],
+      "relatedObjects": [
+        "time-consumer-sets",
+        "transfer-status"
+      ]
     }
   ],
   "relationships": [
-    {"from":"time-attributes","to":"time-card-fields","type":"feeds"},
-    {"from":"time-card-fields","to":"layout-components","type":"renders_in"},
-    {"from":"layout-components","to":"time-entry-profiles","type":"configured_by"},
-    {"from":"hcm-groups","to":"time-entry-profiles","type":"drives_assignment"},
-    {"from":"time-entry-profiles","to":"time-processing-profiles","type":"links_to"},
-    {"from":"repeating-time-periods","to":"time-processing-profiles","type":"scopes"},
-    {"from":"time-categories","to":"time-consumer-sets","type":"supports"},
-    {"from":"time-consumer-sets","to":"validation-calculation-rules","type":"context_for"},
-    {"from":"validation-calculation-rules","to":"time-processing-profiles","type":"executes_under"}
+    {
+      "from": "time-attributes",
+      "to": "time-card-fields",
+      "type": "feeds"
+    },
+    {
+      "from": "time-card-fields",
+      "to": "layout-components",
+      "type": "used_by"
+    },
+    {
+      "from": "layout-components",
+      "to": "time-entry-profile",
+      "type": "configures"
+    },
+    {
+      "from": "hcm-groups",
+      "to": "time-entry-profile",
+      "type": "applies_to"
+    },
+    {
+      "from": "time-entry-profile",
+      "to": "time-processing-profile",
+      "type": "links_to"
+    },
+    {
+      "from": "repeating-time-periods",
+      "to": "time-processing-profile",
+      "type": "supports"
+    },
+    {
+      "from": "time-categories",
+      "to": "time-consumer-sets",
+      "type": "feeds"
+    },
+    {
+      "from": "time-consumer-sets",
+      "to": "validation-calc-rules",
+      "type": "context_for"
+    },
+    {
+      "from": "validation-calc-rules",
+      "to": "time-processing-profile",
+      "type": "drives"
+    },
+    {
+      "from": "time-processing-profile",
+      "to": "consumers",
+      "type": "routes_to"
+    }
   ],
   "lifecycleStages": [
     "Person records time",
@@ -130,60 +246,547 @@
     "Payroll / Projects / External transfer"
   ],
   "troubleshootingBranches": [
-    "Who is the worker?",
-    "Which HCM Group applies?",
-    "Which Time Entry Profile?",
-    "Which layout/fields/buttons appear?",
-    "Which Time Processing Profile?",
-    "Which consumer set / time categories?",
-    "Which validation/calc rules fire?",
-    "What approval status exists?",
-    "What transfer status/failure exists?"
+    "1. Who is the worker?",
+    "2. Which HCM Group applies?",
+    "3. Which Time Entry Profile?",
+    "4. Which layout/fields/buttons appear?",
+    "5. Which Time Processing Profile?",
+    "6. Which consumer set / time categories?",
+    "7. Which validation/calc rules fire?",
+    "8. What approval status exists?",
+    "9. What transfer status/failure exists?"
   ],
   "glossary": [
-    {"term":"Entry experience","oracleTerm":"Time Entry Experience","definition":"Where users capture time (time card, web clock, calendar, device load)."},
-    {"term":"Rule execution","oracleTerm":"Validation / Calculation Rules","definition":"Checks and computations that process entered time."},
-    {"term":"Transfer readiness","oracleTerm":"Transfer Status","definition":"Indicates whether processed time can be consumed downstream."}
+    {
+      "term": "Plain English: Worker enters time",
+      "oracleTerm": "Time Entry Experience",
+      "definition": "The runtime screen or channel where time is submitted."
+    },
+    {
+      "term": "Plain English: Rules check and compute",
+      "oracleTerm": "Validation Rules / Calculation Rules",
+      "definition": "Validation checks whether time is acceptable; calculation derives outcomes."
+    },
+    {
+      "term": "Plain English: Ready for downstream",
+      "oracleTerm": "Transfer Status",
+      "definition": "State indicating time can be consumed by payroll, projects, or external systems."
+    }
   ],
-  "diagrams": {
-    "architecture": {
-      "viewBox": "0 0 1400 1200",
-      "bands": [
-        {"label":"Setup / Design","x":10,"y":10,"w":1380,"h":460},
-        {"label":"Runtime / Daily Use","x":55,"y":530,"w":1290,"h":520},
-        {"label":"Consumers","x":150,"y":1085,"w":1100,"h":100}
-      ],
+  "diagram": {
+    "setupRuntimeConsumers": {
       "nodes": [
-        {"id":"a1","label":"Time Attributes","x":430,"y":90,"objectId":"time-attributes"},
-        {"id":"a2","label":"Time Card Fields","x":430,"y":200,"objectId":"time-card-fields"},
-        {"id":"a3","label":"Layout Components / Sets","x":430,"y":310,"objectId":"layout-components"},
-        {"id":"a4","label":"HCM Groups","x":190,"y":310,"objectId":"hcm-groups"},
-        {"id":"a5","label":"Time Entry Profiles","x":310,"y":430,"objectId":"time-entry-profiles"},
-        {"id":"a6","label":"Repeating Time Periods","x":700,"y":310,"objectId":"repeating-time-periods"},
-        {"id":"a7","label":"Time Processing Profiles","x":700,"y":430,"objectId":"time-processing-profiles"},
-        {"id":"a8","label":"Time Categories","x":1140,"y":200,"objectId":"time-categories"},
-        {"id":"a9","label":"Time Consumer Sets","x":1140,"y":310,"objectId":"time-consumer-sets"},
-        {"id":"a10","label":"Validation / Calculation Rules","x":1050,"y":430,"objectId":"validation-calculation-rules"},
-        {"id":"a11","label":"Worker enters time","x":310,"y":620,"context":"Runtime action in entry experience"},
-        {"id":"a12","label":"System validates","x":650,"y":730,"objectId":"validation-calculation-rules"},
-        {"id":"a13","label":"System calculates","x":830,"y":840,"objectId":"validation-calculation-rules"},
-        {"id":"a14","label":"Manager reviews / approves","x":830,"y":930,"context":"Approval path if required"},
-        {"id":"a15","label":"Time becomes transferable","x":830,"y":1020,"context":"Transfer-ready state"},
-        {"id":"a16","label":"Global Payroll","x":260,"y":1135,"context":"Downstream consumer"},
-        {"id":"a17","label":"Project Costing","x":520,"y":1135,"context":"Downstream consumer"},
-        {"id":"a18","label":"Project Execution Mgmt","x":790,"y":1135,"context":"Downstream consumer"},
-        {"id":"a19","label":"External systems","x":1080,"y":1135,"context":"Downstream consumer"}
+        {
+          "id": "n1",
+          "label": "Time Attributes",
+          "x": 29,
+          "y": 10,
+          "group": "setup"
+        },
+        {
+          "id": "n2",
+          "label": "Time Card Fields",
+          "x": 29,
+          "y": 22,
+          "group": "setup"
+        },
+        {
+          "id": "n3",
+          "label": "Layout Components / Sets",
+          "x": 29,
+          "y": 34,
+          "group": "setup"
+        },
+        {
+          "id": "n4",
+          "label": "HCM Groups",
+          "x": 10,
+          "y": 34,
+          "group": "setup"
+        },
+        {
+          "id": "n5",
+          "label": "Time Entry Profiles",
+          "x": 20,
+          "y": 46,
+          "group": "setup"
+        },
+        {
+          "id": "n6",
+          "label": "Repeating Time Periods",
+          "x": 53,
+          "y": 34,
+          "group": "setup"
+        },
+        {
+          "id": "n7",
+          "label": "Time Processing Profiles",
+          "x": 52,
+          "y": 46,
+          "group": "setup"
+        },
+        {
+          "id": "n8",
+          "label": "Time Categories",
+          "x": 81,
+          "y": 22,
+          "group": "setup"
+        },
+        {
+          "id": "n9",
+          "label": "Time Consumer Sets",
+          "x": 81,
+          "y": 34,
+          "group": "setup"
+        },
+        {
+          "id": "n10",
+          "label": "Validation / Calculation Rules",
+          "x": 78,
+          "y": 46,
+          "group": "setup"
+        },
+        {
+          "id": "n11",
+          "label": "Worker enters time",
+          "x": 17,
+          "y": 62,
+          "group": "runtime"
+        },
+        {
+          "id": "n12",
+          "label": "System validates",
+          "x": 48,
+          "y": 71,
+          "group": "runtime"
+        },
+        {
+          "id": "n13",
+          "label": "System calculates",
+          "x": 61,
+          "y": 81,
+          "group": "runtime"
+        },
+        {
+          "id": "n14",
+          "label": "Manager reviews / approves",
+          "x": 61,
+          "y": 90,
+          "group": "runtime"
+        },
+        {
+          "id": "n15",
+          "label": "Time becomes transferable",
+          "x": 61,
+          "y": 99,
+          "group": "runtime"
+        },
+        {
+          "id": "n16",
+          "label": "Global Payroll",
+          "x": 16,
+          "y": 113,
+          "group": "consumer"
+        },
+        {
+          "id": "n17",
+          "label": "Project Costing",
+          "x": 36,
+          "y": 113,
+          "group": "consumer"
+        },
+        {
+          "id": "n18",
+          "label": "Project Execution Mgmt",
+          "x": 56,
+          "y": 113,
+          "group": "consumer"
+        },
+        {
+          "id": "n19",
+          "label": "External systems",
+          "x": 78,
+          "y": 113,
+          "group": "consumer"
+        }
       ],
-      "edges": [["a1","a2"],["a2","a3"],["a3","a5"],["a4","a5"],["a4","a7"],["a6","a7"],["a8","a9"],["a9","a10"],["a9","a7"],["a10","a7"],["a5","a11"],["a11","a12"],["a7","a12"],["a10","a12"],["a12","a13"],["a10","a13"],["a13","a14"],["a14","a15"],["a15","a16"],["a15","a17"],["a15","a18"],["a15","a19"]]
+      "edges": [
+        [
+          "n1",
+          "n2"
+        ],
+        [
+          "n2",
+          "n3"
+        ],
+        [
+          "n3",
+          "n5"
+        ],
+        [
+          "n4",
+          "n5"
+        ],
+        [
+          "n4",
+          "n7"
+        ],
+        [
+          "n6",
+          "n7"
+        ],
+        [
+          "n8",
+          "n9"
+        ],
+        [
+          "n9",
+          "n10"
+        ],
+        [
+          "n9",
+          "n7"
+        ],
+        [
+          "n10",
+          "n7"
+        ],
+        [
+          "n5",
+          "n11"
+        ],
+        [
+          "n11",
+          "n12"
+        ],
+        [
+          "n7",
+          "n12"
+        ],
+        [
+          "n10",
+          "n12"
+        ],
+        [
+          "n12",
+          "n13"
+        ],
+        [
+          "n10",
+          "n13"
+        ],
+        [
+          "n13",
+          "n14"
+        ],
+        [
+          "n14",
+          "n15"
+        ],
+        [
+          "n15",
+          "n16"
+        ],
+        [
+          "n15",
+          "n17"
+        ],
+        [
+          "n15",
+          "n18"
+        ],
+        [
+          "n15",
+          "n19"
+        ]
+      ]
+    }
+  },
+  "nodeContexts": {
+    "1. Who is the worker?": {
+      "plainEnglish": "1. Who is the worker?: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "1. Who is the worker?",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
     },
-    "lifecycle": {
-      "viewBox": "0 0 2200 180"
+    "2. Which HCM Group applies?": {
+      "plainEnglish": "2. Which HCM Group applies?: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "2. Which HCM Group applies?",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
     },
-    "troubleshooting": {
-      "viewBox": "0 0 700 2050"
+    "3. Which Time Entry Profile?": {
+      "plainEnglish": "3. Which Time Entry Profile?: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "3. Which Time Entry Profile?",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
     },
-    "relationships": {
-      "viewBox": "0 0 2200 760"
+    "3rd Party Device / Load": {
+      "plainEnglish": "3rd Party Device / Load: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "3rd Party Device / Load",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "4. Which layout/fields/buttons appear?": {
+      "plainEnglish": "4. Which layout/fields/buttons appear?: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "4. Which layout/fields/buttons appear?",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "5. Which Time Processing Profile?": {
+      "plainEnglish": "5. Which Time Processing Profile?: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "5. Which Time Processing Profile?",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "6. Which consumer set / time categories?": {
+      "plainEnglish": "6. Which consumer set / time categories?: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "6. Which consumer set / time categories?",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "7. Which validation/calc rules fire?": {
+      "plainEnglish": "7. Which validation/calc rules fire?: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "7. Which validation/calc rules fire?",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "8. What approval status exists?": {
+      "plainEnglish": "8. What approval status exists?: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "8. What approval status exists?",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "9. What transfer status/failure exists?": {
+      "plainEnglish": "9. What transfer status/failure exists?: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "9. What transfer status/failure exists?",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Approval routing occurs if required": {
+      "plainEnglish": "Approval routing occurs if required: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Approval routing occurs if required",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Attributes classify the entry": {
+      "plainEnglish": "Attributes classify the entry: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Attributes classify the entry",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Calculation Rules": {
+      "plainEnglish": "Calculation Rules: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Calculation Rules",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Calculation rules derive more time": {
+      "plainEnglish": "Calculation rules derive more time: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Calculation rules derive more time",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Calendar": {
+      "plainEnglish": "Calendar: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Calendar",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Entered Time Data": {
+      "plainEnglish": "Entered Time Data: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Entered Time Data",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "External systems": {
+      "plainEnglish": "External systems: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "External systems",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Global Payroll": {
+      "plainEnglish": "Global Payroll: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Global Payroll",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "HCM Groups": {
+      "plainEnglish": "Grouping context used to determine applicable time entry setup.",
+      "oracleTerm": "HCM Groups",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Layout Components / Layout Sets": {
+      "plainEnglish": "Layout Components / Layout Sets: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Layout Components / Layout Sets",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Layout Components / Sets": {
+      "plainEnglish": "Controls visible layout elements and controls for time entry.",
+      "oracleTerm": "Layout Components / Sets",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Layout/profile context determines allowed structure": {
+      "plainEnglish": "Layout/profile context determines allowed structure: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Layout/profile context determines allowed structure",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Manager reviews / approves": {
+      "plainEnglish": "Manager reviews / approves: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Manager reviews / approves",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "OTL captures entry": {
+      "plainEnglish": "OTL captures entry: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "OTL captures entry",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Other External Uses": {
+      "plainEnglish": "Other External Uses: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Other External Uses",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Payroll": {
+      "plainEnglish": "Payroll: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Payroll",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Payroll / Projects / External transfer": {
+      "plainEnglish": "Payroll / Projects / External transfer: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Payroll / Projects / External transfer",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Payroll Transfer": {
+      "plainEnglish": "Payroll Transfer: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Payroll Transfer",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Person records time": {
+      "plainEnglish": "Person records time: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Person records time",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Processing profile applies consumer logic": {
+      "plainEnglish": "Processing profile applies consumer logic: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Processing profile applies consumer logic",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Project Costing": {
+      "plainEnglish": "Project Costing: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Project Costing",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Project Costing Transfer": {
+      "plainEnglish": "Project Costing Transfer: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Project Costing Transfer",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Project Execution Mgmt": {
+      "plainEnglish": "Project Execution Mgmt: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Project Execution Mgmt",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Repeating Time Periods": {
+      "plainEnglish": "Repeating Time Periods: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Repeating Time Periods",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Rules Engine": {
+      "plainEnglish": "Rules Engine: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Rules Engine",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "System calculates": {
+      "plainEnglish": "System calculates: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "System calculates",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "System validates": {
+      "plainEnglish": "System validates: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "System validates",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time Attributes": {
+      "plainEnglish": "Classifies time entry data and supports field/layout behavior.",
+      "oracleTerm": "Time Attributes",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time Card": {
+      "plainEnglish": "Time Card: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Time Card",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time Card Fields": {
+      "plainEnglish": "Fields shown in the time card user interface.",
+      "oracleTerm": "Time Card Fields",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time Categories": {
+      "plainEnglish": "Time Categories: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Time Categories",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time Consumer Set": {
+      "plainEnglish": "Time Consumer Set: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Time Consumer Set",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time Consumer Sets": {
+      "plainEnglish": "Defines consumer destinations and contexts for processed time.",
+      "oracleTerm": "Time Consumer Sets",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time Entry Experience": {
+      "plainEnglish": "The channel where workers/managers enter or review time.",
+      "oracleTerm": "Time Entry Experience",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time Entry Profiles": {
+      "plainEnglish": "Determines who enters time and what appears on the time entry experience.",
+      "oracleTerm": "Time Entry Profiles",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time Processing Profiles": {
+      "plainEnglish": "Applies validation/calculation/consumer logic for entered time.",
+      "oracleTerm": "Time Processing Profiles",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Time becomes transferable": {
+      "plainEnglish": "Time becomes transferable: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Time becomes transferable",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Transfer Status": {
+      "plainEnglish": "Indicates whether time is ready for downstream transfer.",
+      "oracleTerm": "Transfer Status",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Transfer status becomes ready": {
+      "plainEnglish": "Transfer status becomes ready: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Transfer status becomes ready",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Validation / Calculation Rules": {
+      "plainEnglish": "Rules that check and calculate time before approval and transfer.",
+      "oracleTerm": "Validation / Calculation Rules",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Validation Rules": {
+      "plainEnglish": "Validation Rules: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Validation Rules",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Validation rules check it": {
+      "plainEnglish": "Validation rules check it: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Validation rules check it",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Web Clock": {
+      "plainEnglish": "Web Clock: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Web Clock",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Worker / Manager / Device": {
+      "plainEnglish": "Worker / Manager / Device: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Worker / Manager / Device",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Worker Time Entry Profile": {
+      "plainEnglish": "Worker Time Entry Profile: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Worker Time Entry Profile",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Worker Time Processing Profile": {
+      "plainEnglish": "Worker Time Processing Profile: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Worker Time Processing Profile",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
+    },
+    "Worker enters time": {
+      "plainEnglish": "Worker enters time: role in the OTL mental model. TODO: Needs review against /docs.",
+      "oracleTerm": "Worker enters time",
+      "context": "Used in setup/runtime/downstream path depending on diagram position."
     }
   }
 }

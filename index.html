@@ -1,37 +1,38 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OTL Mental Model Home</title>
-  <link rel="stylesheet" href="src/css/styles.css" />
-</head>
-<body>
-  <header class="hero">
-    <h1>Oracle Time and Labor Mental Model</h1>
-    <p id="source-warning" class="warning"></p>
-    <nav class="tabs">
-      <a class="active" href="index.html">Home</a>
-      <a href="architecture.html">Architecture</a>
-      <a href="lifecycle.html">Lifecycle</a>
-      <a href="relationships.html">Relationships</a>
-      <a href="troubleshooting.html">Troubleshooting</a>
-    </nav>
-  </header>
-  <main>
-    <section class="panel"><h2>Overview</h2><div id="overview-cards" class="overview-cards"></div></section>
-    <section class="panel split">
-      <div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Oracle Time and Labor Mental Model</title>
+    <link rel="stylesheet" href="src/css/styles.css" />
+  </head>
+  <body data-page="home">
+    <header class="hero">
+      <h1>Oracle Time and Labor Mental Model</h1>
+      <p id="source-warning" class="warning"></p>
+      <nav class="tabs" aria-label="Diagram pages">
+        <a href="index.html" class="tab active">Overview</a><a href="architecture.html" class="tab">Architecture</a><a href="lifecycle.html" class="tab">Lifecycle</a><a href="troubleshooting.html" class="tab">Troubleshooting</a><a href="relationships.html" class="tab">Relationship Map</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2>Home Overview</h2>
+        <div id="overview-cards" class="overview-cards"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Expandable Learning Layers</h2>
+        <details open><summary>Setup (configuration before daily use)</summary><p>Oracle terms in this layer include profiles, attributes, rules, categories, and layout components. TODO: Needs review with /docs.</p></details>
+        <details open><summary>Runtime (daily entry and approval)</summary><p>Users enter time, the system validates/calculates, and approvals are completed. TODO: Needs review with /docs.</p></details>
+        <details open><summary>Downstream (transfer and consumption)</summary><p>Transfer-ready time is consumed by payroll, project costing, and external integrations. TODO: Needs review with /docs.</p></details>
+      </section>
+
+      <section class="panel">
         <h2>Glossary</h2>
         <div id="glossary-list" class="glossary-list"></div>
-      </div>
-      <div>
-        <h2>How to use this site</h2>
-        <p>Open each page to explore an interactive diagram. Hover any node for a quick definition and click it for full context.</p>
-        <p>Any uncertain concept is labeled <strong>Needs review</strong>.</p>
-      </div>
-    </section>
-  </main>
-  <script type="module" src="src/js/home.js"></script>
-</body>
+      </section>
+    </main>
+    <script type="module" src="src/js/app.js"></script>
+  </body>
 </html>
