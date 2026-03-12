@@ -39,8 +39,7 @@ main { width: min(2100px, 98vw); margin: 1rem auto 2rem; display: grid; gap: 1re
 .band.runtime-band { fill: rgba(0,163,163,.08); stroke: #9dd9d9; }
 .band.consumer-band { fill: rgba(255,122,89,.08); stroke: #ffc4b3; }
 .band-label { fill: #42507d; font-size: 12px; text-anchor: middle; font-weight: 700; }
-.node-group { cursor: pointer; transition: transform .12s ease; }
-.node-group:hover,.node-group.active { transform: scale(1.04); }
+.node-group { cursor: pointer; }
 .node-group:hover .node-rect,.node-group.active .node-rect { stroke-width: 2.6; filter: drop-shadow(0 6px 8px rgba(68,95,174,.2)); }
 .node-group.match .node-rect { stroke: #ff3366; stroke-width: 3; }
 .node-group.faded { opacity: .18; }
