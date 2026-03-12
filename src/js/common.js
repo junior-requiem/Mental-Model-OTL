@@ -48,12 +48,13 @@ export function renderDetail(node, model, detailEl) {
   }
 }
 
-export function drawInteractiveNode({ svg, node, width = 220, height = 58, detailEl, model, onActivate }) {
+export function drawInteractiveNode({ svg, node, width = 220, height = 58, detailEl, model, onActivate, wrapAt = 22, lineSpacing = 24, fontSize = 13 }) {
   const g = svgEl('g', { class: 'node-group', transform: `translate(${node.x - width / 2},${node.y - height / 2})` });
   g.appendChild(svgEl('rect', { class: 'node-rect', width, height }));
-  const text = svgEl('text', { class: 'node-label', x: width / 2, y: height / 2 });
-  wrapLines(node.label, 22).forEach((line, i) => {
-    const tsp = svgEl('tspan', { x: width / 2, dy: i === 0 ? -((wrapLines(node.label, 22).length - 1) * 12) / 2 : 24 });
+  const text = svgEl('text', { class: 'node-label', x: width / 2, y: height / 2, 'font-size': fontSize });
+  const lines = wrapLines(node.label, wrapAt);
+  lines.forEach((line, i) => {
+    const tsp = svgEl('tspan', { x: width / 2, dy: i === 0 ? -((lines.length - 1) * (lineSpacing / 2)) : lineSpacing });
     tsp.textContent = line;
     text.appendChild(tsp);
   });
