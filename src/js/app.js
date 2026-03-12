@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id);
 const page = document.body.dataset.page;
-const state = { model: null, drawnNodes: [], relationship: null };
+const state = { model: null, drawnNodes: [], relationship: null, tour: null };
 
 function svgEl(tag, attrs = {}) {
   const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -58,18 +58,47 @@ function showDetailsByLabel(label) {
     : `<h3>${label}</h3><p><strong>Plain English:</strong> ${ctx.plainEnglish}</p><p><strong>Oracle term:</strong> ${ctx.oracleTerm}</p><p><strong>Context:</strong> ${ctx.context}</p><p>TODO: Needs review mapping to /docs and major object catalog.</p>`;
 }
 
-function drawNode(svg, node, sx = 10, sy = 10, w = 150, h = 42) {
+function wrapLabel(label, maxChars = 28, maxLines = 3) {
+  const words = label.split(/\s+/);
+  const lines = [];
+  let line = '';
+  words.forEach(word => {
+    const next = `${line} ${word}`.trim();
+    if (next.length > maxChars && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  });
+  if (line) lines.push(line);
+  if (lines.length > maxLines) {
+    const kept = lines.slice(0, maxLines);
+    kept[maxLines - 1] = `${kept[maxLines - 1].slice(0, maxChars - 1)}…`;
+    return kept;
+  }
+  return lines;
+}
+
+function drawNode(svg, node, sx = 10, sy = 10, w = 150, h = 42, options = {}) {
   const x = node.x * sx - w / 2;
   const y = node.y * sy - h / 2;
   const group = inferGroup(node);
   const g = svgEl('g', { class: `node-group ${group}`, transform: `translate(${x},${y})`, tabindex: '0', 'data-label': node.label, role: 'button', 'aria-label': `Node ${node.label}` });
-  g.append(svgEl('rect', { class: 'node-rect', width: w, height: h, rx: 10, ry: 10 }));
-  const t = svgEl('text', { class: 'node-label', x: w / 2, y: h / 2 });
-  node.label.split(' / ').forEach((part, i) => {
-    const span = svgEl('tspan', { x: w / 2, dy: i === 0 ? 0 : 12 });
-    span.textContent = part;
+  g.append(svgEl('rect', { class: 'node-rect', width: w, height: h, rx: 12, ry: 12 }));
+
+  const fontSize = options.fontSize || 14;
+  const lineHeight = options.lineHeight || Math.max(16, fontSize + 2);
+  const lines = wrapLabel(node.label, options.wrap || 28, options.maxLines || 3);
+  const startY = h / 2 - ((lines.length - 1) * lineHeight) / 2;
+
+  const t = svgEl('text', { class: 'node-label', x: w / 2, y: startY, 'font-size': fontSize });
+  lines.forEach((line, i) => {
+    const span = svgEl('tspan', { x: w / 2, dy: i === 0 ? 0 : lineHeight });
+    span.textContent = line;
     t.appendChild(span);
   });
+
   g.appendChild(t);
   g.addEventListener('mouseenter', e => showTooltip(e, node.label));
   g.addEventListener('mousemove', e => showTooltip(e, node.label));
@@ -108,6 +137,28 @@ function attachSearch() {
   });
 }
 
+function attachGuidedTour(labels = []) {
+  const nextBtn = $('tour-next');
+  if (!nextBtn || !labels.length) return;
+  state.tour = { labels, index: -1 };
+  nextBtn.disabled = false;
+  nextBtn.addEventListener('click', () => {
+    state.tour.index = (state.tour.index + 1) % state.tour.labels.length;
+    showDetailsByLabel(state.tour.labels[state.tour.index]);
+  });
+}
+
+function bindFocusMode() {
+  const toggle = $('toggle-focus');
+  if (!toggle) return;
+  toggle.addEventListener('click', () => {
+    document.body.classList.toggle('immersive-mode');
+    const active = document.body.classList.contains('immersive-mode');
+    toggle.textContent = active ? 'Exit Full Screen' : 'Full Screen Mode';
+    toggle.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+}
+
 function renderOverview() {
   $('source-warning').textContent = state.model.meta.sourceStatus;
   $('overview-cards').innerHTML = `<article><h3>Core objects</h3><p>${state.model.objects.length}</p></article><article><h3>Relationships</h3><p>${state.model.relationships.length}</p></article><article><h3>Lifecycle steps</h3><p>${state.model.lifecycleStages.length}</p></article><article><h3>Troubleshooting checks</h3><p>${state.model.troubleshootingBranches.length}</p></article>`;
@@ -119,35 +170,63 @@ function renderArchitecture() {
   const svg = $('architecture-svg'); svg.innerHTML = ''; addArrowDefs(svg);
   svg.append(svgEl('rect', { class: 'band setup-band', x: 1, y: 1, width: 998, height: 450 }), svgEl('rect', { class: 'band runtime-band', x: 35, y: 500, width: 930, height: 560 }), svgEl('rect', { class: 'band consumer-band', x: 100, y: 1080, width: 850, height: 100 }));
   [['Setup / Design', 500, 24], ['Runtime / Daily Use', 500, 524], ['Consumers', 500, 1098]].forEach(([txt, x, y]) => { const t = svgEl('text', { class: 'band-label', x, y }); t.textContent = txt; svg.appendChild(t); });
-  const nodes = state.model.diagram.setupRuntimeConsumers.nodes; const by = Object.fromEntries(nodes.map(n => [n.id, n]));
+  const nodes = state.model.diagram.setupRuntimeConsumers.nodes;
+  const by = Object.fromEntries(nodes.map(n => [n.id, n]));
   state.model.diagram.setupRuntimeConsumers.edges.forEach(([a, b]) => drawEdge(svg, by[a], by[b]));
-  nodes.forEach(n => drawNode(svg, n));
+  nodes.forEach(n => drawNode(svg, n, 10, 10, 210, 68, { wrap: 26, fontSize: 13 }));
   attachSearch();
+  attachGuidedTour(nodes.slice(0, 10).map(n => n.label));
 }
 
 function renderLifecycle() {
   state.drawnNodes = [];
-  const svg = $('lifecycle-svg'); svg.innerHTML = ''; addArrowDefs(svg);
-  const y = 110;
-  state.model.lifecycleStages.forEach((label, i) => {
-    const x = 96 + i * 188; const n = { label, x: x / 10, y: y / 10, group: 'runtime' };
-    drawNode(svg, n, 10, 10, 182, 64);
-    if (i < state.model.lifecycleStages.length - 1) svg.appendChild(svgEl('path', { class: 'edge', d: `M ${x + 92} ${y} L ${x + 124} ${y}` }));
+  const svg = $('lifecycle-svg');
+  svg.innerHTML = '';
+  addArrowDefs(svg);
+  const rowBreak = 5;
+  const xStart = 230;
+  const xGap = 330;
+  const topY = 130;
+  const bottomY = 360;
+
+  const nodes = state.model.lifecycleStages.map((label, i) => {
+    const secondRow = i >= rowBreak;
+    const rowIndex = secondRow ? (rowBreak - 1) - (i - rowBreak) : i;
+    return { label, x: (xStart + rowIndex * xGap) / 10, y: (secondRow ? bottomY : topY) / 10, group: 'runtime' };
+  });
+
+  nodes.forEach((n, i) => {
+    drawNode(svg, n, 10, 10, 290, 98, { wrap: 30, fontSize: 14, lineHeight: 18 });
+    if (i >= nodes.length - 1) return;
+    const current = nodes[i];
+    const next = nodes[i + 1];
+    if (current.y === next.y) {
+      svg.appendChild(svgEl('path', { class: 'edge', d: `M ${current.x * 10 + 145} ${current.y * 10} L ${next.x * 10 - 145} ${next.y * 10}` }));
+    } else {
+      svg.appendChild(svgEl('path', { class: 'edge', d: `M ${current.x * 10} ${current.y * 10 + 49} L ${next.x * 10} ${next.y * 10 - 49}` }));
+    }
   });
   attachSearch();
+  attachGuidedTour(nodes.map(n => n.label));
 }
 
 function renderTroubleshooting() {
   state.drawnNodes = [];
-  const svg = $('troubleshoot-svg'); svg.innerHTML = ''; addArrowDefs(svg);
-  const x = 300;
+  const svg = $('troubleshoot-svg');
+  svg.innerHTML = '';
+  addArrowDefs(svg);
+  const x = 460;
   state.model.troubleshootingBranches.forEach((label, i) => {
-    const y = 90 + i * 200;
-    drawNode(svg, { label, x: x / 10, y: y / 10, group: 'runtime' }, 10, 10, 620, 130);
-    if (i < state.model.troubleshootingBranches.length - 1) svg.appendChild(svgEl('path', { class: 'edge', d: `M ${x} ${y + 65} L ${x} ${y + 125}` }));
+    const y = 95 + i * 155;
+    drawNode(svg, { label, x: x / 10, y: y / 10, group: 'runtime' }, 10, 10, 760, 102, { wrap: 52, fontSize: 15, lineHeight: 20 });
+    if (i < state.model.troubleshootingBranches.length - 1) {
+      svg.appendChild(svgEl('path', { class: 'edge', d: `M ${x} ${y + 52} L ${x} ${y + 103}` }));
+    }
   });
   attachSearch();
+  attachGuidedTour(state.model.troubleshootingBranches);
 }
+
 function setRelationshipFocus(activeNodeId) {
   const rel = state.relationship;
   if (!rel) return;
@@ -175,14 +254,14 @@ function bindRelationshipControls() {
   const viewport = $('relationship-viewport');
   const zoomValue = $('zoom-value');
   const setZoom = next => {
-    rel.zoom = Math.min(1.8, Math.max(0.55, next));
+    rel.zoom = Math.min(2.1, Math.max(0.7, next));
     viewport.style.transform = `scale(${rel.zoom})`;
     if (zoomValue) zoomValue.textContent = `${Math.round(rel.zoom * 100)}%`;
   };
 
-  $('zoom-in')?.addEventListener('click', () => setZoom(rel.zoom + 0.1));
-  $('zoom-out')?.addEventListener('click', () => setZoom(rel.zoom - 0.1));
-  $('zoom-reset')?.addEventListener('click', () => setZoom(1));
+  $('zoom-in')?.addEventListener('click', () => setZoom(rel.zoom + 0.12));
+  $('zoom-out')?.addEventListener('click', () => setZoom(rel.zoom - 0.12));
+  $('zoom-reset')?.addEventListener('click', () => setZoom(1.08));
 
   document.querySelectorAll('[data-filter-group]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -207,16 +286,16 @@ function bindRelationshipControls() {
     rel.nodeEls.get(nodeId)?.dispatchEvent(new Event('click'));
   });
 
-  setZoom(1);
+  setZoom(1.08);
 }
-
-
 
 function renderRelationships() {
   state.drawnNodes = [];
-  const svg = $('relationship-svg'); svg.innerHTML = ''; addArrowDefs(svg);
+  const svg = $('relationship-svg');
+  svg.innerHTML = '';
+  addArrowDefs(svg);
   const viewport = $('relationship-viewport');
-  if (viewport) viewport.style.transform = 'scale(1)';
+  if (viewport) viewport.style.transform = 'scale(1.08)';
 
   const nodes = [
     { id: 'a1', label: 'Worker / Manager / Device', x: 105, y: 55, group: 'runtime' },
@@ -257,7 +336,7 @@ function renderRelationships() {
     svg.appendChild(text);
   });
 
-  const edges = [['a1','a2'],['a2','a3'],['a2','a4'],['a2','a5'],['a2','a6'],['a3','a7'],['a4','a7'],['a5','a7'],['a6','a7'],['a7','a8'],['a7','a9'],['a7','a10'],['a8','a15'],['a8','a16'],['a9','a17'],['a10','a17'],['a11','a13'],['a13','a14'],['a12','a10'],['a10','a14'],['a17','a18'],['a17','a19'],['a17','a20'],['a8','a21'],['a21','a22'],['a21','a23'],['a21','a24']].map(([from,to], i) => ({ from, to, i }));
+  const edges = [['a1', 'a2'], ['a2', 'a3'], ['a2', 'a4'], ['a2', 'a5'], ['a2', 'a6'], ['a3', 'a7'], ['a4', 'a7'], ['a5', 'a7'], ['a6', 'a7'], ['a7', 'a8'], ['a7', 'a9'], ['a7', 'a10'], ['a8', 'a15'], ['a8', 'a16'], ['a9', 'a17'], ['a10', 'a17'], ['a11', 'a13'], ['a13', 'a14'], ['a12', 'a10'], ['a10', 'a14'], ['a17', 'a18'], ['a17', 'a19'], ['a17', 'a20'], ['a8', 'a21'], ['a21', 'a22'], ['a21', 'a23'], ['a21', 'a24']].map(([from, to], i) => ({ from, to, i }));
   const by = Object.fromEntries(nodes.map(n => [n.id, n]));
 
   const drawRelationshipEdge = edge => {
@@ -279,18 +358,18 @@ function renderRelationships() {
   const edgeEls = edges.map(e => ({ ...e, el: drawRelationshipEdge(e) }));
 
   const nodeSize = {
-    a1: [240, 56], a2: [230, 56],
-    a3: [210, 56], a4: [155, 56], a5: [155, 56], a6: [155, 56],
-    a7: [220, 56], a8: [185, 56], a9: [275, 56], a10: [250, 56],
-    a11: [190, 56], a12: [170, 56], a13: [190, 56], a14: [290, 56],
-    a15: [180, 56], a16: [185, 56], a17: [210, 56], a18: [145, 56],
-    a19: [185, 56], a20: [220, 56], a21: [175, 56], a22: [180, 56], a23: [225, 56], a24: [185, 56]
+    a1: [255, 62], a2: [245, 62],
+    a3: [220, 62], a4: [165, 62], a5: [165, 62], a6: [165, 62],
+    a7: [235, 62], a8: [195, 62], a9: [295, 62], a10: [275, 62],
+    a11: [200, 62], a12: [180, 62], a13: [200, 62], a14: [305, 62],
+    a15: [190, 62], a16: [200, 62], a17: [225, 62], a18: [150, 62],
+    a19: [195, 62], a20: [235, 62], a21: [185, 62], a22: [190, 62], a23: [235, 62], a24: [195, 62]
   };
 
   const nodeEls = new Map();
   nodes.forEach(n => {
     const [w, h] = nodeSize[n.id] || [180, 56];
-    drawNode(svg, n, 10, 1, w, h);
+    drawNode(svg, n, 10, 1, w, h, { wrap: 26, fontSize: 13 });
     const current = state.drawnNodes[state.drawnNodes.length - 1];
     current.dataset.nodeId = n.id;
     current.addEventListener('click', () => setRelationshipFocus(n.id));
@@ -315,10 +394,10 @@ function renderRelationships() {
   attachSearch();
 }
 
-
 async function init() {
   const res = await fetch('src/data/otl-model.json');
   state.model = await res.json();
+  bindFocusMode();
   if (page === 'home') renderOverview();
   if (page === 'architecture') renderArchitecture();
   if (page === 'lifecycle') renderLifecycle();
