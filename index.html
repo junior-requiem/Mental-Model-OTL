@@ -8,31 +8,50 @@
   </head>
   <body data-page="home">
     <header class="hero">
-      <h1>Oracle Time and Labor Mental Model</h1>
+      <div class="hero-title-row">
+        <h1>Oracle Time and Labor Learning Map</h1>
+      </div>
+      <p id="hero-subtitle" class="hero-subtitle"></p>
       <p id="source-warning" class="warning"></p>
       <nav class="tabs" aria-label="Diagram pages">
-        <a href="index.html" class="tab active">Overview</a><a href="architecture.html" class="tab">Architecture</a><a href="lifecycle.html" class="tab">Lifecycle</a><a href="troubleshooting.html" class="tab">Troubleshooting</a><a href="relationships.html" class="tab">Relationship Map</a>
+        <a href="index.html" class="tab active">Overview</a>
+        <a href="architecture.html" class="tab">Architecture</a>
+        <a href="lifecycle.html" class="tab">Lifecycle</a>
+        <a href="troubleshooting.html" class="tab">Troubleshooting</a>
+        <a href="relationships.html" class="tab">Relationship Map</a>
       </nav>
     </header>
 
     <main>
       <section class="panel">
-        <h2>Home Overview</h2>
+        <h2>Learning Overview</h2>
+        <p class="panel-intro">Start here to understand the model in plain English first, then the Oracle terms and object dependencies.</p>
         <div id="overview-cards" class="overview-cards"></div>
       </section>
 
       <section class="panel">
         <h2>Expandable Learning Layers</h2>
-        <details open><summary>Setup (configuration before daily use)</summary><p>In this layer you define who gets which policy pack: HCM Groups, Worker Time Entry Profiles, Worker Time Processing Profiles, layout sets, time attributes, categories, and rule sets.</p></details>
-        <details open><summary>Runtime (daily entry and approval)</summary><p>Workers and managers capture time through time cards, calendar, web clock, or device imports. OTL then validates entries, derives calculated time, and routes approvals.</p></details>
-        <details open><summary>Downstream (transfer and consumption)</summary><p>After required approvals, time reaches ready-to-transfer status and is handed off to payroll, project costing, project execution, extracts, or other external consumers.</p></details>
+        <details open>
+          <summary>Setup (configuration before daily use)</summary>
+          <p>Define who gets which policy pack: HCM Groups, entry and processing profiles, layout sets, time attributes, categories, and rule sets.</p>
+        </details>
+        <details open>
+          <summary>Runtime (daily entry and approval)</summary>
+          <p>Workers and managers capture time through time cards, calendar, web clock, or device imports. OTL then validates, calculates, and routes approvals.</p>
+        </details>
+        <details open>
+          <summary>Downstream (transfer and consumption)</summary>
+          <p>After required approvals, time reaches ready-to-transfer status and is handed off to payroll, project costing, project execution, extracts, or external consumers.</p>
+        </details>
       </section>
 
       <section class="panel">
         <h2>Glossary</h2>
+        <p class="panel-intro">Hover and compare terms to quickly connect plain English language with Oracle object names.</p>
         <div id="glossary-list" class="glossary-list"></div>
       </section>
     </main>
+
     <script type="module" src="src/js/app.js"></script>
   </body>
 </html>

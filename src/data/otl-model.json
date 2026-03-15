@@ -9,7 +9,7 @@
       "id": "hcm-groups",
       "name": "HCM Groups",
       "oracleTerm": "HCM Groups",
-      "definition": "Plain English: audience selector for policy assignment. Oracle term: HCM Groups.",
+      "definition": "Audience selector for policy assignment.",
       "purpose": "Targets the right worker populations for entry and processing profiles.",
       "flowFit": "Setup foundation",
       "commonMistakes": [
