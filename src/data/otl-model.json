@@ -425,21 +425,21 @@
         {
           "id": "n13",
           "label": "System calculates",
-          "x": 61,
-          "y": 81,
+          "x": 77.4,
+          "y": 70.5,
           "group": "runtime"
         },
         {
           "id": "n14",
           "label": "Manager reviews / approves",
-          "x": 61,
-          "y": 90,
+          "x": 77.4,
+          "y": 83,
           "group": "runtime"
         },
         {
           "id": "n15",
           "label": "Time becomes transferable",
-          "x": 61,
+          "x": 77.4,
           "y": 99,
           "group": "runtime"
         },

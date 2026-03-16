@@ -47,6 +47,17 @@ body.map-test-page {
     linear-gradient(180deg, #eef5ff, #f6f9fd);
 }
 
+body.diagram-page {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 520px at 50% -10%, #e4efff, transparent 70%),
+    radial-gradient(900px 420px at 100% 0%, #fbefd9, transparent 72%),
+    linear-gradient(180deg, #eef5ff, #f6f9fd);
+}
+
 h1,
 h2,
 h3,
@@ -143,6 +154,47 @@ body.map-test-page main.map-test-main {
   grid-template-rows: auto auto minmax(0, 1fr);
 }
 
+body.diagram-page .hero {
+  padding: 0.72rem 0.95rem 0.65rem;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+}
+
+body.diagram-page .hero-title-row {
+  margin-bottom: 0.28rem;
+}
+
+body.diagram-page .hero h1 {
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+}
+
+body.diagram-page .hero-subtitle {
+  font-size: 0.89rem;
+  margin-bottom: 0.42rem;
+  max-width: 1100px;
+}
+
+body.diagram-page .tabs {
+  gap: 0.38rem;
+}
+
+body.diagram-page .tab {
+  padding: 0.34rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+body.diagram-page main.diagram-main {
+  width: 100vw;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.72rem;
+}
+
 .panel {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -206,6 +258,36 @@ summary:focus-visible {
   font-weight: 700;
   min-width: 54px;
   color: var(--ink-soft);
+}
+
+body.diagram-page .panel {
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(16px);
+}
+
+body.diagram-page .diagram-toolbar,
+body.diagram-page .diagram-filters {
+  padding: 0.65rem 0.8rem;
+  flex: 0 0 auto;
+}
+
+body.diagram-page .controls label {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+body.diagram-page .controls input {
+  border-radius: 999px;
+  min-width: 230px;
+  background: rgba(248, 251, 255, 0.96);
+}
+
+body.diagram-page .controls button,
+body.diagram-page .filter-row button {
+  border-radius: 999px;
+  background: rgba(247, 250, 255, 0.96);
+  padding: 0.46rem 0.8rem;
 }
 
 .overview-cards {
@@ -324,12 +406,34 @@ details p {
   align-items: start;
 }
 
+body[data-page="relationships"]:not(.map-test-page) .split {
+  grid-template-columns: minmax(0, 2.25fr) minmax(300px, 0.78fr);
+}
+
 .detail {
   min-height: 62vh;
   line-height: 1.45;
   position: sticky;
   top: 102px;
   padding: 0.85rem;
+}
+
+.floating-detail {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  left: auto;
+  min-height: 0;
+  width: min(34vw, 460px);
+  min-width: 320px;
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+  background: rgba(247, 249, 252, 0.94);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 42px rgba(17, 36, 63, 0.16);
+  z-index: 5;
+  transition: left 380ms cubic-bezier(0.22, 1, 0.36, 1), top 0.24s ease, opacity 0.18s ease;
+  will-change: left;
 }
 
 .detail-header {
@@ -368,6 +472,57 @@ details p {
   max-height: 78vh;
 }
 
+.diagram-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.78rem;
+  overflow: hidden;
+}
+
+body.diagram-page .diagram-wrap.scrollable {
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 246, 255, 0.96)),
+    linear-gradient(145deg, #f8fbff, #edf3ff);
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  padding: 1rem;
+}
+
+body[data-page="architecture"] .diagram-stage {
+  --architecture-detail-width: clamp(260px, 18vw, 320px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--architecture-detail-width);
+  gap: 1rem;
+  align-items: start;
+  min-height: calc(100vh - 260px);
+  max-height: calc(100vh - 260px);
+}
+
+body[data-page="relationships"] .diagram-stage {
+  --relationship-detail-width: clamp(248px, 19vw, 286px);
+}
+
+body[data-page="architecture"] .diagram-wrap.scrollable {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: auto;
+  height: 100%;
+  max-height: 100%;
+  min-width: 0;
+  padding-right: 1rem;
+  scrollbar-gutter: stable both-edges;
+}
+
+body[data-page="architecture"] {
+  overflow-x: hidden;
+}
+
 .diagram {
   width: 100%;
   height: auto;
@@ -378,6 +533,38 @@ details p {
     radial-gradient(circle at 8% 4%, #f8fcff, #f2f7ff 42%, #edf4ff 80%),
     linear-gradient(145deg, #f8fbff, #edf3ff);
   min-height: 62vh;
+  transition: width 0.2s ease, height 0.2s ease;
+}
+
+body.diagram-page .diagram {
+  min-height: 100%;
+  border-radius: 18px;
+}
+
+body[data-page="architecture"] #architecture-svg {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  min-height: 0;
+  flex: 0 0 auto;
+}
+
+body[data-page="architecture"] .floating-detail {
+  position: sticky;
+  top: 1rem;
+  right: auto;
+  left: auto;
+  width: var(--architecture-detail-width);
+  min-width: 260px;
+  max-width: min(320px, calc(100% - 2rem));
+  max-height: calc(100vh - 292px);
+  overflow: auto;
+}
+
+body[data-page="architecture"] .architecture-focus-row {
+  justify-content: center;
+  padding: 0.55rem 0.72rem;
 }
 
 #relationship-viewport {
@@ -385,6 +572,53 @@ details p {
   transform-origin: top left;
   transition: transform 0.2s ease;
   max-height: 78vh;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+body[data-page="relationships"]:not(.map-test-page) #relationship-viewport {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.7rem calc(var(--relationship-detail-width) + 0.95rem) 0.7rem 0.7rem;
+  scrollbar-gutter: stable both-edges;
+}
+
+body[data-page="relationships"]:not(.map-test-page) .floating-detail {
+  width: var(--relationship-detail-width);
+  min-width: 248px;
+  max-width: min(286px, calc(100% - 2rem));
+}
+
+body[data-page="relationships"] #relationship-svg {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  min-height: 0;
+  flex: 0 0 auto;
+  margin: 0 auto;
+}
+
+body[data-page="troubleshooting"] .diagram-stage {
+  min-height: calc(100vh - 260px);
+}
+
+body[data-page="troubleshooting"] .diagram-wrap.scrollable {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: auto;
+}
+
+body[data-page="troubleshooting"] #troubleshoot-svg {
+  width: auto;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  min-height: 0;
+  flex: 0 0 auto;
+  margin: 0 auto;
 }
 
 body.map-test-page .map-test-controls,
@@ -407,6 +641,7 @@ body.map-test-page #relationship-viewport {
   max-height: calc(100vh - 154px);
   min-height: calc(100vh - 154px);
   width: 100%;
+  transform: none !important;
   border-radius: 14px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(242, 247, 255, 0.94)),
@@ -415,11 +650,14 @@ body.map-test-page #relationship-viewport {
 
 body.map-test-page .diagram {
   min-height: calc(100vh - 170px);
+  transform-origin: top left;
+  transition: width 0.2s ease, height 0.2s ease;
 }
 
 body.map-test-page .map-test-detail {
   position: absolute;
-  right: max(1rem, env(safe-area-inset-right));
+  left: 24px;
+  right: auto;
   bottom: 5.5rem;
   top: auto;
   min-height: 0;
@@ -431,27 +669,30 @@ body.map-test-page .map-test-detail {
   backdrop-filter: blur(10px);
   box-shadow: 0 18px 42px rgba(17, 36, 63, 0.16);
   z-index: 5;
+  transition: left 380ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease, opacity 0.18s ease;
+  will-change: left;
 }
 
 .band.setup-band {
-  fill: rgba(255, 168, 87, 0.15);
+  fill: rgba(255, 168, 87, 0.18);
   stroke: #dc9144;
 }
 
 .band.runtime-band {
-  fill: rgba(30, 178, 162, 0.15);
+  fill: rgba(30, 178, 162, 0.18);
   stroke: #2e9d93;
 }
 
 .band.consumer-band {
-  fill: rgba(124, 84, 198, 0.15);
+  fill: rgba(124, 84, 198, 0.18);
   stroke: #8758d7;
 }
 
 .band-label {
   fill: var(--ink-strong);
-  font-size: 13px;
-  text-anchor: middle;
+  font-size: 14px;
+  text-anchor: start;
+  dominant-baseline: hanging;
   font-weight: 700;
 }
 
@@ -464,14 +705,23 @@ body.map-test-page .map-test-detail {
 
 .node-group {
   cursor: pointer;
+  filter: drop-shadow(0 10px 16px rgba(29, 56, 96, 0.08));
+}
+
+.node-tile {
+  fill: rgba(255, 255, 255, 0.84);
+  stroke: rgba(142, 166, 200, 0.34);
+  stroke-width: 1.1;
+  rx: 18;
+  ry: 18;
 }
 
 .node-rect {
-  fill: #fff;
+  fill: rgba(255, 255, 255, 0.98);
   stroke: #8ea6c8;
-  stroke-width: 1.3;
-  rx: 12;
-  ry: 12;
+  stroke-width: 1.7;
+  rx: 14;
+  ry: 14;
 }
 
 .node-group.setup .node-rect {
@@ -522,12 +772,12 @@ body.map-test-page .map-test-detail {
   dominant-baseline: middle;
   pointer-events: none;
   font-weight: 700;
+  letter-spacing: 0.005em;
 }
 
 .node-group:hover .node-rect,
 .node-group.active .node-rect {
-  stroke-width: 2.7;
-  filter: drop-shadow(0 6px 8px rgba(36, 70, 120, 0.2));
+  stroke-width: 3;
 }
 
 .node-group.match .node-rect {
@@ -538,6 +788,10 @@ body.map-test-page .map-test-detail {
 .node-group.faded,
 .relationship-edge.faded {
   opacity: 0.14;
+}
+
+.relationship-edge {
+  marker-end: none;
 }
 
 .relationship-edge.edge-highlight {
@@ -669,6 +923,52 @@ body.immersive-mode .detail {
     position: static;
     min-height: auto;
   }
+
+  body.diagram-page {
+    overflow: auto;
+  }
+
+  body.diagram-page main.diagram-main {
+    min-height: auto;
+  }
+
+  body.diagram-page .diagram-stage {
+    overflow: visible;
+  }
+
+  body.diagram-page .diagram-wrap.scrollable {
+    min-height: 50vh;
+  }
+
+  body.diagram-page .floating-detail {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    max-height: none;
+    margin-top: 0.8rem;
+  }
+
+  body[data-page="architecture"] .diagram-wrap.scrollable {
+    display: block;
+    overflow: auto;
+    padding-right: 0.55rem;
+  }
+
+  body[data-page="architecture"] .diagram-stage {
+    display: block;
+    min-height: auto;
+    max-height: none;
+  }
+
+  body[data-page="relationships"]:not(.map-test-page) #relationship-viewport {
+    padding-right: 0.55rem;
+  }
+
+  body[data-page="architecture"] #architecture-svg {
+    width: 100%;
+    height: auto;
+    max-height: none;
+  }
 }
 
 @media (max-width: 760px) {
@@ -706,5 +1006,28 @@ body.immersive-mode .detail {
     min-width: 0;
     max-height: none;
     margin-top: 0.6rem;
+  }
+
+  body.diagram-page .hero {
+    padding: 0.65rem 0.72rem 0.55rem;
+  }
+
+  body.diagram-page main.diagram-main {
+    padding: 0.55rem;
+  }
+
+  body.diagram-page .diagram-toolbar,
+  body.diagram-page .diagram-filters,
+  body.diagram-page .diagram-stage {
+    padding: 0.62rem;
+  }
+
+  body.diagram-page .diagram-wrap.scrollable {
+    padding: 0.55rem;
+    min-height: 44vh;
+  }
+
+  body[data-page="relationships"]:not(.map-test-page) #relationship-viewport {
+    padding-right: 0.55rem;
   }
 }

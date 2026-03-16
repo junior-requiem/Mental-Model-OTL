@@ -1836,6 +1836,368 @@ To make this ideal for an agent-driven interactive site, split this file later i
 
 This current document is intentionally monolithic so your agent can read one complete end-to-end narrative first.
 
-_complete_mental_model.md…]()
+## 45) Additional Architectural Framework for Oracle Fusion Cloud Time and Labor
 
-- Time Card
+The architectural integrity of a workforce management system hinges upon the precise configuration of data capture mechanisms, logic-based processing engines, and seamless downstream integration protocols. Oracle Fusion Cloud Time and Labor (OTL) represents a sophisticated, rule-based infrastructure designed to aggregate, validate, and transform raw time events into actionable financial and payroll data.1 This section adds source-backed detail for technical gaps, naming validation, and implementation reasoning.
+
+### 45.1 The Temporal and Logic Foundation: Rules and Formulas
+At the core of Oracle Time and Labor lies a multi-tiered logic engine that governs how time is interpreted, validated, and calculated. This engine is built upon the interaction between Fast Formulas, Rule Templates, and Rules, forming a hierarchy that ensures both technical flexibility and administrative ease of use.
+#### Fast Formula in the Workforce Management Context
+Within the Oracle Fusion Cloud Time and Labor framework, a Fast Formula serves as the atomic level of logic, providing the programmatic instructions required to execute complex validations and calculations that exceed standard configuration capabilities.2
+Official Oracle Term: Fast Formula.2
+Plain English Definition: A script written in a specific Oracle language that performs calculations or checks data based on defined business logic.
+Purpose: To provide the underlying logic for time entry validation, overtime calculations, device event processing, and submission behavior.2
+Where it Fits in the End-to-End Flow: Fast Formulas are the foundational step in the logic configuration. They are created first and then registered within Rule Templates, which are subsequently used to create the Rules that run when a user saves or submits a time card.2
+Key Relationships: They are associated with Rule Templates via specific Formula Types (e.g., Time Calculation Rule, Time Entry Rule). They utilize Database Items (DBIs) to pull information from the Time Repository or Human Resources.2
+Common Implementation Mistakes: A frequent error involves hard-coding values directly into the formula logic rather than defining them as input parameters. This limits the reusability of the formula across different Rule Templates.2 Another mistake is failing to account for the specific Contexts required for OTL, such as the Effective Date or the Assignment ID.2
+Downstream Impact: Inaccurate formulas can lead to incorrect premium pay calculations, failed payroll transfers, or the acceptance of invalid time entries that violate labor laws.2
+Documentation Link:.2
+#### Rule Templates
+The Rule Template acts as a functional wrapper for the Fast Formula, translating technical code into a configurable interface for administrators.
+Official Oracle Term: Rule Templates.2
+Plain English Definition: A configuration screen that exposes the parameters of a Fast Formula, allowing an administrator to set specific values without editing the code.
+Purpose: To simplify the adaptation of formulas into specific business rules by identifying parameters and outputs in an easy-to-configure format.2
+Where it Fits in the End-to-End Flow: Templates are created after the Fast Formula is registered. They serve as the blueprint from which multiple individual Rules can be generated.3
+Key Relationships: Rule Templates link a Fast Formula to the Rules. They define the "Time Card Events that Trigger Rule" (e.g., Save, Submit) and specify the summation level (e.g., Time Card, Day).5
+Common Implementation Mistakes: Creating too many unique templates when a single template with varied parameters would suffice. Also, failing to correctly group outputs in calculation templates, which can lead to overlapping or missing calculated hours.6
+Downstream Impact: Incorrectly configured triggers in a template may prevent a rule from running when needed (e.g., a validation that only runs on Submit when it should also run on Save), potentially allowing users to bypass critical checks during the entry process.6
+Documentation Link:.2
+#### Rules
+Rules are the functional instances of logic derived from templates, containing the specific threshold values and messages required for a population of workers.
+Official Oracle Term: Rules (specifically Time Entry Rules, Time Calculation Rules, or Time Device Rules).2
+Plain English Definition: An active instruction that checks time data against a limit (e.g., "Max 40 hours") and either allows the entry, gives a warning, or blocks the action.
+Purpose: To enforce organizational policies and labor regulations by validating reported time or generating additional calculated time (like overtime premiums).2
+Where it Fits in the End-to-End Flow: Rules execute during the time reporting phase (validation) and the processing phase (calculation). They are evaluated whenever the triggering action defined in the template occurs.1
+Key Relationships: Rules are created from Rule Templates and are organized into Rule Sets.2
+Common Implementation Mistakes: Setting message severities incorrectly—for instance, making a minor policy check a "Hard Error" that prevents submission, or making a critical legal check a "Warning" that is easily ignored.2
+Downstream Impact: Rules directly determine the validity of the data in the Time Repository and the final hours sent to Payroll or Project Costing.1
+Documentation Link:.2
+#### Rule Sets
+A Rule Set is a collection of Rules organized into a single logical unit for assignment to a group of people.
+Official Oracle Term: Rule Sets.2
+Plain English Definition: A folder or group that holds multiple rules so they can be applied to workers all at once.
+Purpose: To categorize rules of the same type (e.g., all validation rules) so they can be assigned via a Processing Profile.2
+Where it Fits in the End-to-End Flow: Rule Sets are the final step in the logic configuration before being linked to a Worker Time Processing Profile or a Time Device Processing Profile.2
+Key Relationships: Rule Sets contain Rules. They are assigned to workers through Time Processing Profiles.2
+Common Implementation Mistakes: Nesting too many rule sets within each other, which complicates the "Analyze Rule Processing Details" diagnostic process.2
+Downstream Impact: Because Rule Sets are the objects assigned to profiles, any omission of a rule from a set means that specific logic will not be applied to the workers linked to that profile.8
+Documentation Link:.2
+#### Analyze Rule Processing Details
+This utility is the primary diagnostic tool for understanding the behavior of the rules engine.
+Official Oracle Term: Analyze Rule Processing Details.9
+Plain English Definition: A troubleshooting tool that shows exactly why a rule passed or failed and how it calculated its results.
+Purpose: To review processing logs and diagnose errors in formulas, rules, and rule sets used to validate and process time cards.9
+Where it Fits in the End-to-End Flow: This is a maintenance and troubleshooting task used after time cards have been processed or when rules produce unexpected results.9
+Key Relationships: It requires specific security configuration (Data Roles) to access and is linked to the Time and Labor Administrator job role.11
+Common Implementation Mistakes: Failing to enable logging before attempting to analyze details, or neglecting to set up the proper security profiles, which results in the tool showing no data.10
+Downstream Impact: Without this tool, resolving complex overtime or validation issues becomes an exercise in trial and error, significantly increasing the time required for system stabilization.9
+Documentation Link:.9
+### 45.2 The Collection Ecosystem: Devices and Events
+Oracle Time and Labor supports a variety of time collection methods, ranging from manual entry on a time card to automated events captured by biometric devices or the internal Web Clock.
+#### Web Clock
+Web Clock is an integrated time-stamping application within the Oracle Fusion environment.
+Official Oracle Term: Web Clock.1
+Plain English Definition: A digital "punch clock" that employees use on their computers or mobile devices to record the exact moment they start and stop work.
+Purpose: To capture real-time time events and geolocation data, providing high-accuracy time reporting.8
+Where it Fits in the End-to-End Flow: It is a source of time events. These events are processed by the "Generate Time Cards from Time Collection Device" process to create time entries.8
+Key Relationships: Web Clock buttons are defined with specific application events and time attributes. It bypasses the need for Time Device Event Mappings because the events are natively understood by OTL.8
+Common Implementation Mistakes: Not configuring the proper "Time Attributes" on the Web Clock buttons (e.g., forgetting to associate a button with a Payroll Time Type), which results in incomplete time entries.8
+Downstream Impact: Directly feeds the Time Repository with events that become the basis for payroll payment.1
+Documentation Link:.7
+#### Time Device Event Mapping
+For third-party devices, OTL requires a translation layer to interpret external data.
+Official Oracle Term: Time Device Event Mapping.8
+Plain English Definition: A configuration that tells Oracle how to interpret a specific signal from a third-party time clock (e.g., signal "01" means "Clock In").
+Purpose: To map supplier-specific events (like a "Meal" badge) to OTL application events (like "Out" and "In").15
+Where it Fits in the End-to-End Flow: This mapping is used during the import process of external data files from third-party vendors.1
+Key Relationships: Linked to Time Device Event Mapping Sets and referenced in Time Device Processing Profiles.8
+Common Implementation Mistakes: Mapping a single supplier event to the wrong combination of application events, leading to "orphaned" punches where a worker is clocked in but never clocked out.8
+Downstream Impact: Incorrect mapping causes validation errors in the "Time Events" and "Time Entries" pages, requiring manual intervention by Time and Labor Managers.14
+Documentation Link:.7
+#### Time Device Event Mapping Set
+Mapping sets are collections of event mappings that support a specific device or location policy.
+Official Oracle Term: Time Device Event Mapping Set.8
+Plain English Definition: A group of punch-type definitions used to process data from a specific group of time clocks.
+Purpose: To organize mappings (Shift Start, Break, Shift Stop) into a set that can be assigned to workers.8
+Where it Fits in the End-to-End Flow: These sets are assigned to Time Device Processing Profiles.8
+Key Relationships: Contains Time Device Event Mappings; linked to Time Device Processing Profile.8
+Common Implementation Mistakes: Assigning a mapping set to a profile used by Web Clock users. Documentation clarifies that mapping sets are not applied to Web Clock because the logic is in the button configuration.8
+Downstream Impact: Defines the set of available actions for a specific population of device users.8
+Documentation Link:.8
+#### Time Device Rule Set
+This specialized rule set is designed to validate the raw events coming from devices.
+Official Oracle Term: Time Device Rule Set.8
+Plain English Definition: A group of rules that check if a "punch" is valid (e.g., "Is the worker punching in too early for their shift?").
+Purpose: To evaluate time events and generate exceptions based on shift limits, grace periods, or schedule deviations.8
+Where it Fits in the End-to-End Flow: Runs during the event import and processing phase, before the events are converted into time card entries.8
+Key Relationships: Part of a Time Device Processing Profile.8
+Common Implementation Mistakes: Applying standard "Time Entry Rules" here instead of "Time Device Rules." Device rules focus on the event, whereas entry rules focus on the completed duration on the time card.2
+Downstream Impact: Determines which punches are flagged as exceptions for manager review on the "Time Events" page.8
+Documentation Link:.8
+#### Submission Rule
+A submission rule automates the finalization of a time card based on device activity.
+Official Oracle Term: Submission Rule (contained in a Time Submission Rule Set).2
+Plain English Definition: A logic step that says, "Once this worker has punched out for the fifth time this week, automatically submit their time card for approval."
+Purpose: To identify when to automatically save and submit time cards generated from device or Web Clock events.2
+Where it Fits in the End-to-End Flow: This is the final step in the automated processing of device events.8
+Key Relationships: Contained within a Time Submission Rule Set; part of a Time Device Processing Profile.8
+Common Implementation Mistakes: Setting a submission rule that triggers too frequently (e.g., after every punch), which prevents managers from reviewing the full day's or week's activity before submission.8
+Downstream Impact: Automates the transfer readiness of data by moving time cards from "Saved" to "Submitted" or "Approved".8
+Documentation Link:.2
+#### Time Device Processing Profile
+This profile is the master configuration object for device and clock integration.
+Official Oracle Term: Time Device Processing Profile.8
+Plain English Definition: A set of instructions assigned to a group of people that dictates how their punches are interpreted, validated, and submitted.
+Purpose: To link individuals (via HCM Groups) to the specific mapping sets and rule sets required for their time collection method.8
+Where it Fits in the End-to-End Flow: This is the primary assignment object for workers using devices or the Web Clock.8
+Key Relationships: Links HCM Groups to: Time Device Event Mapping Sets, Time Device Rule Sets, Time Submission Rule Sets, and Time Device Export Data.8
+Common Implementation Mistakes: Not assigning a profile to an HCM Group, which results in the "Generate Time Cards from Time Collection Device" process ignoring those workers' punches.8
+Downstream Impact: Coordinates the entire lifecycle of a "punch" from the device to the time card.8
+Documentation Link:.8
+### 45.3 The Data Vault: Time Repository and Transfer Logistics
+The Time Repository is the central nervous system of OTL, storing every version of every time card and managing its journey to downstream systems.
+#### Time Repository and Status Concepts
+The Time Repository is the consolidated storage for reported and calculated time data.
+Official Oracle Term: Time Repository.16
+Plain English Definition: The central database where all time cards and punch events are kept.
+Purpose: To provide a single source of truth for time data across the enterprise, supporting analytics, rules processing, and transfers.16
+Where it Fits in the End-to-End Flow: Every step of the OTL process (entry, validation, calculation, approval, transfer) interacts with the repository.1
+Key Relationships: Data is stored at levels: Header (Level 1), Day (Level 2), Entry (Level 3), and Attribute (Level 4).17 It is accessed by HCM Extracts and REST services.16
+Repository Statuses: Data in the repository transitions through statuses such as Saved, Submitted, Approved, and Transferred.17
+Needs Review: While the high-level statuses are confirmed, the specific internal database codes for intermediate "Transfer Readiness" states are typically documented in the OTL Data Dictionary rather than the implementation guide.
+Downstream Impact: All reporting and integration depend on the status of data in the repository.16
+Documentation Link:.16
+#### Statuses Used in OTL and Transfer Readiness
+
+The state of a time entry determines whether it is eligible to be picked up by a payroll or costing consumer.
+
+| Status | Meaning in Lifecycle | Transfer Eligibility |
+| --- | --- | --- |
+| Saved | Worker has entered time but not finished. | No.19 |
+| Submitted | Worker has finished and is awaiting manager approval. | No, usually.19 |
+| Approved | Manager has authorized the time. | Yes, primary status for transfer.18 |
+| Rejected | Manager has sent time back for correction. | No.20 |
+| Transferred | Data has been successfully sent to the consumer. | N/A, already moved.16 |
+
+- Confirmed Details: Consumer validation runs specifically based on the action defined in the Time Consumer Set, for example Submit Only or Submit and Save.19
+- Needs Review: The unapproved but appropriately prepared state used by the Time Entries Ready To Transfer Extracts requires confirmation of the specific configuration flags needed to bypass the Approved requirement.21
+- Documentation Link: `.17`
+#### Audit in OTL
+Auditing provides the historical trail of changes made to time data.
+Official Oracle Term: Change Audit.7
+Plain English Definition: A tracking system that records who changed what on a time card and why they did it.
+Purpose: To ensure compliance and provide an auditable history of modifications to time entries.22
+Where it Fits in the End-to-End Flow: Auditing occurs during the manual adjustment of time cards by workers or managers.20
+Key Relationships: Reason codes are pulled from the ORA_HWM_CA_REASONS lookup.22 Audit options are enabled in the Time Processing Profile.7
+Common Implementation Mistakes: Not requiring an audit reason for manager adjustments, which makes legal compliance difficult during a labor audit.22
+Downstream Impact: Audit data is stored in the repository and can be extracted for compliance reporting.17
+Documentation Link:.7
+### 45.4 Governance and Configuration Maintenance
+The integrity of OTL is maintained through effective dating, security models, and robust integration protocols.
+#### Effective Dating in OTL Configuration
+OTL utilizes date-effective objects to allow for policy changes without breaking historical records.
+Official Oracle Term: Date-Effective Objects.1
+Plain English Definition: Settings that have a "Start Date" and an "End Date," allowing you to have one policy end on Friday and a new one start on Saturday.
+Purpose: To maintain the historical accuracy of time calculations and to schedule future changes in policy.2
+Where it Fits in the End-to-End Flow: This is a core property of configuration objects like Rule Sets, HCM Groups, and Time Allocation Assignments.2
+Key Relationships: Rule Sets are versioned by date. HCM Group memberships are evaluated for specific date ranges.2
+Common Implementation Mistakes: Forgetting to run the "Evaluate HCM Group Membership" process after a future-dated change in HR, which leaves workers on the wrong profile until the process is run.3
+Downstream Impact: Ensures that retroactive changes to employee assignments correctly trigger the appropriate rules for that specific period.26
+Documentation Link:.1
+#### Security Model for OTL
+The security model controls who can view, edit, and approve time.
+Official Oracle Term: Security Model (composed of Job Roles, Data Roles, and Security Profiles).11
+Plain English Definition: The set of permissions that decide if you are a "Worker," a "Manager," or an "Administrator" and which employees you are allowed to see.
+Purpose: To protect sensitive time and pay data and to ensure that managers only see time cards for their own direct reports.11
+Where it Fits in the End-to-End Flow: Security is the foundational layer that allows users to access the OTL work areas and tasks.11
+Key Relationships: Job Roles (e.g., Time and Labor Manager) are linked to Data Roles, which use Security Profiles (Organization, Person, LDG) to filter data.11
+Common Implementation Mistakes: Granting "View All" person security to line managers, which allows them to see time cards for everyone in the company.12
+Downstream Impact: Inadequate security can lead to privacy breaches or unauthorized time card approvals.12
+Documentation Link:.11
+#### Delivered Objects in OTL
+Oracle provides pre-built objects to accelerate implementation.
+Official Oracle Term: Delivered Objects.1
+Plain English Definition: "Out-of-the-box" templates for rules, layouts, and profiles that work for standard payroll or project scenarios.
+Purpose: To provide a starting point for configuration and to support common business processes without custom development.32
+Where it Fits in the End-to-End Flow: These are used during the initial setup phase to provide default functionality.1
+Key Relationships: Includes objects like the "Projects and Payroll Layout Set" and "Weekly Starting Sunday" repeating periods.32
+Common Implementation Mistakes: Modifying a delivered object directly instead of duplicating it, which can cause issues during environment upgrades.1
+Downstream Impact: Using delivered objects ensures compatibility with standard payroll and project costing features.32
+Documentation Link:.1
+### 45.5 Filling the Gaps: Itemized Source-Backed Details
+The following items represent the specific technical gaps identified for the OTL mental model.
+
+#### 1. Time Attestation Sets
+
+- Plain English Definition: A collection of questionnaires used to confirm that workers are following rules, such as taking breaks.
+- Official Oracle Term: `Time Attestation Set`.35
+- Purpose: To document and enforce compliance with labor policies through worker affirmations.35
+- Where it Fits in the End-to-End Flow: Linked to the Worker Time Entry Profile and triggered during time card Save or Submit.23
+- Key Relationships: Questionnaire -> Time Attestation Set -> Worker Time Entry Profile.23
+- Common Implementation Mistakes: Setting the display level too high, causing the questionnaire to pop up every time a row is added rather than once at submission.35
+- Downstream Impact: Prevents non-compliant time cards from being submitted.35
+- Documentation Link: `.23`
+#### 2. Overtime Period
+- Plain English Definition: The specific week or timeframe used to calculate whether someone worked enough hours to get overtime pay.
+- Official Oracle Term: `Overtime Period`.33
+- Purpose: To define the temporal boundary for overtime aggregation, for example weekly starting Monday.33
+- Where it Fits in the End-to-End Flow: Selected in the Worker Time Processing Profile.33
+- Key Relationships: Repeating Time Period -> Overtime Period -> Worker Time Processing Profile.33
+Common Implementation Mistakes: Choosing an overtime period that starts on a different day than the worker’s shift cycle, causing split-week calculation errors.33
+- Downstream Impact: Inaccurate overtime premium generation.5
+- Documentation Link: `.33`
+#### 16. Enhanced / Unified Time Cards
+- Plain English Definition: A modern interface that combines payroll, project, and absence entry into one screen.
+- Official Oracle Term: `Unified Time Entry Experience / Layouts`.7
+- Purpose: To provide a single, consistent layout for different roles such as Worker, Manager, and Administrator.7
+- Where it Fits in the End-to-End Flow: The primary user interface for time reporting.38
+- Key Relationships: Layout Sets -> Unified Layouts -> Worker Time Entry Profile.7
+- Common Implementation Mistakes: Over-complicating the layout with too many dependent fields, which can lead to slow page load times in the unified UI.7
+- Downstream Impact: Directly impacts user adoption and data accuracy.7
+- Documentation Link: `.7`
+#### 21. HCM Extracts for Time Transfer
+- Plain English Definition: A tool used to pull a file of time data to send to a third-party payroll company.
+- Official Oracle Term: `HCM Extracts`, specifically Time Cards Ready To Transfer.16
+- Purpose: To extract repository data for third-party payroll and scheduling apps.16
+- Where it Fits in the End-to-End Flow: The final step in the transfer process for non-Oracle payroll systems.16
+- Key Relationships: User Entities (`HWM_EXT_...`) -> Extract Definition -> Time Repository.16
+- Common Implementation Mistakes: Not linking the Previous Transfer User Entity, which causes the extract to miss retroactive adjustments.18
+- Downstream Impact: Failure to pay employees correctly for past-period adjustments.18
+- Documentation Link: `.16`
+#### 22. REST Status Update / Status Change Request Services
+- Plain English Definition: An automated way for an external system to tell Oracle, "I received this time card successfully."
+- Official Oracle Term: `statusChangeRequests` REST service.16
+- Purpose: To update the transfer status of time entries in the repository from Ready to Transfer to Transferred.16
+- Where it Fits in the End-to-End Flow: Follows the HCM Extract or data transfer to an external app.16
+- Key Relationships: External App -> `statusChangeRequests` REST API -> Time Repository.16
+- Common Implementation Mistakes: Not completing this step, which causes the next extract run to pull the same data again and risks duplicate payments.16
+- Downstream Impact: Essential for reconciling OTL with external payroll systems.16
+- Documentation Link: `.16`
+#### Integration Mechanisms and Downstream Synergies
+Integration in OTL is not merely a data transfer; it is a validation and reconciliation loop that ensures financial and labor compliance.
+#### Payroll Integration (Gap 17)
+Integration with Global Payroll involves mapping OTL elements to payroll input values. Key components include:
+
+- Costing Overrides: Allows workers to allocate time to different departments or cost centers directly on the time card.34
+- Rate Definitions: Retrieves default rates or allows manual overrides for premium pay.34
+- Repeating Periods: Must align between OTL and Payroll to ensure the Ready to Transfer status matches the payroll processing window.33
+#### Project Costing Integration (Gap 18)
+The project costing flow is unique because it often requires validation against external project tables.
+
+- Expenditure Organizations: HR Departments must be classified as project expenditure organizations to allow time entry.41
+- Transaction Controls: OTL checks these controls to see if a resource is even allowed to bill to a specific task.32
+- Import Costs Process: This is the pull mechanism where Project Costing retrieves data from the OTL repository.42
+#### Absence Integration (Gap 19)
+Absence management acts as a parallel consumer.
+
+- Automatic Transfer: Unlike payroll or project costing, absence entries do not wait for a transfer process; they are often synchronized in real time or via the Evaluate Group Membership and calculation processes.10
+- Validation: Time entry rules check if a worker has enough balance before allowing an absence entry on the time card.23
+#### Third-Party Payroll Integration (Gap 20)
+For organizations not using Oracle Global Payroll, the "HCM Extracts" and "REST status update" loop described in Gaps 21 and 22 is the standard architectural pattern.16 This ensures that OTL remains the master record for time even when payment happens elsewhere.
+#### Label and Mapping Validation
+
+| Current Model Label | Best Oracle-Accurate Naming | Confirmation Source |
+| --- | --- | --- |
+| "Layout Components / Sets" | Layout Sets / Layout Components | 23 |
+| "Time Entry Profiles" | Worker Time Entry Profiles | 23 |
+| "Time Processing Profiles" | Worker Time Processing Profiles | 33 |
+| "Validation / Calculation Rules" | Time Entry Rules / Time Calculation Rules | 2 |
+| "Global Payroll" vs "Payroll" | Global Payroll (standard time consumer name) | 19 |
+| "External systems" | Needs Review: Often labeled as Third-Party Payroll or External Applications in extracts.18 | 18 |
+| "Other External Uses" | Needs Review: This label appears in older versions; modern Unified Time Entry uses External Applications. | 25 |
+
+Based on official Oracle Fusion documentation, here is the validation of the user's specific terminology queries.
+
+Current Model Label
+Best Oracle-Accurate Naming
+Confirmation Source
+“Layout Components / Sets”
+Layout Sets / Layout Components
+23
+“Time Entry Profiles”
+Worker Time Entry Profiles
+23
+“Time Processing Profiles”
+Worker Time Processing Profiles
+33
+“Validation / Calculation Rules”
+Time Entry Rules / Time Calculation Rules
+2
+“Global Payroll” vs “Payroll”
+Global Payroll (Standard time consumer name)
+19
+“External systems”
+Needs Review: Often labeled as Third-Party Payroll or External Applications in extracts.18
+18
+“Other External Uses”
+Needs Review: This label appears in older versions; modern Unified Time Entry uses External Applications.
+25
+
+### 45.6 Strategic Implementation Conclusions
+The OTL mental model must be viewed as a cycle of capture, refinement, and distribution. Configuration failures most often occur at the "handshake" points between these phases—specifically, the link between HCM Groups and Processing Profiles. If the "Evaluate HCM Group Membership" process is not scheduled frequently, the architectural integrity of the system is compromised, as workers will be processed against outdated rules or layouts.3 Furthermore, the move toward the Unified Time Entry Experience 7 necessitates a move away from fragmented layouts toward consolidated sets that manage worker and manager visibility within a single configuration object.
+#### Normalized Object List (JSON Format)
+
+#### Relationship List (Object A -> Object B -> Relationship)
+- Fast Formula -> Rule Template -> Provides the programmatic logic.
+- Rule Template -> Rule -> Defines the threshold values and triggers.
+- Rule -> Rule Set -> Aggregated into a collection for easier assignment.
+- Rule Set -> Worker Time Processing Profile -> Applied to workers to govern calculation and validation.
+- HCM Group -> Worker Time Processing Profile -> Links a population of workers to their specific rules.
+- Time Device Event Mapping Set -> Time Device Processing Profile -> Translates raw device data for assigned workers.
+- Time Submission Rule Set -> Time Device Processing Profile -> Automates the submission of cards for assigned workers.
+- Time Category -> Time Attestation Set -> Determines which entries require a worker's signature.
+- Worker Time Entry Profile -> Time Attestation Set -> Assigns the compliance questionnaires to workers.
+- Time Consumer Set -> Worker Time Processing Profile -> Defines where the calculated hours are sent.
+- Repeating Time Period -> Worker Time Processing Profile -> Defines the time card and overtime cycles.
+- Layout Set -> Worker Time Entry Profile -> Dictates the visual entry screen for the worker.
+
+#### Terms for Verification (Placeholder List)
+- Repository Internal Status Codes: Specific alphanumeric codes used at the database table level, for example `READY` or `P`.
+- REST Payload JSON Schema: The exact field-level definition for `statusChangeRequests`.
+- Audit Table Name: Verification of physical schema names for the audit trail, for example `HWM_AUDIT_TRAIL`.
+- External Consumer Label Persistence: Verification if `Other External Uses` is strictly deprecated in all current Redwood UI versions.
+- Rule Processing Log Retention: The physical storage limit for diagnostic logs before the Delete Older Log Files process is required.
+#### Works Cited
+Overview of Implementing Time and Labor - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/overview-of-implementing-time-and-labor.html
+Rule Templates, Rules, and Rule Sets for Time and Labor, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/ftlff/rule-templates-rules-and-rule-sets-for-time-and-labor.html
+Time Processing Setup and Maintenance Tasks - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/time-processing-setup-and-maintenance-tasks.html
+Oracle Fusion Human Resources, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/ftlff/how-do-i-administer-time-and-labor-rules-using-fast-formulas.pdf
+Time Calculation Rule Formula Type - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/ftlff/time-calculation-rule-formula-type.html
+Create Time Rule Templates - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/create-time-rule-templates.html
+Configure US Location Override Fields in the Unified Time Entry Experience, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/25a/faitl/configure-us-location-override-fields-in-the-unified-time-entry-experience.html
+How Time Device Processing Profile Components Work Together, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/how-time-device-processing-profile-components-work-together.html
+How You Analyze Processing Details for Time Rules and Rule Sets - Oracle, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/how-you-analyze-processing-details-for-time-rules-and-rule-sets.html
+Oracle Fusion Cloud Human Resources, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitp/how-do-i-implement-time-validations-calculations-and-processing-with-time-and-labor.pdf
+Time and Labor Manager (Job Role) - Oracle, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/oawpm/Time_and_Labor_Manager_job_roles.html
+Set Up the Data Role and Security Profile for the Analyze Rule Processing Details Task, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/set-up-the-data-role-and-security-profile-for-the-analyze-rule-processing-details-task.html
+Name of Product: Oracle Fusion Time and Labor 11.1.9.0.0, accessed March 15, 2026, https://www.oracle.com/tw/corporate/accessibility/templates/t2-3951.html
+Options for Time and Labor Managers to Manage Time Events and Entries, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/fautl/options-for-time-and-labor-managers-to-manage-time-events-and.html
+Time Collection Device Setup and Maintenance Tasks, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/time-collection-device-setup-and-maintenance.html
+Overview of HCM Extracts for Time and Labor and Scheduling - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/fahex/overview-of-hcm-extracts-for-time-and-labor-and-scheduling.html
+Data Groups and Records for the Time Repository - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/fahex/data-groups-and-records-for-the-time-repository.html
+Time Cards Ready To Transfer Extracts - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/fahex/time-cards-ready-to-transfer-extracts.html
+Considerations for Creating Time Consumer Sets - Oracle, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/considerations-for-creating-time-consumer-sets.html
+Options for Time and Labor Managers to Manage Time Cards, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/fautl/options-for-time-and-labor-managers-to-manage-time-cards.html
+Time Entries Ready To Transfer Extracts - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/fahex/time-entries-ready-to-transfer-extracts.html
+Time Validation, Calculation, and Processing Setup and Maintenance Tasks, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitp/time-validation-calculation-and-processing-setup-and-maintenance-tasks.html
+Time Entry Setup and Maintenance Tasks - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/time-entry-setup-and-maintenance-tasks.html
+7 Oracle HCM Benefits for Managing Unionized or Skilled Workers - Kovaion Consulting, accessed March 15, 2026, https://www.kovaion.com/blog/oracle-hcm-benefits-for-managing-unionized-or-skilled-workers/
+Overview of Using Time and Labor - Oracle, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/fautl/overview-of-using-time-and-labor.html
+Understanding the Effective Date Publish Utility - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/cd/F13810_02/hcm92pbr29/eng/hcm/ecih/concept_UnderstandingtheEffectiveDatePublishUtility-b07eb1.html
+Oracle HCM Functional Analyst, Time and Labor (T&L) - Avient Careers - Sign in, accessed March 15, 2026, https://fa-eqzh-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/Avient/job/40000632/?mode=job-location
+Organization Structures - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/cd/E18727_01/doc.121/e13537/T5506T5508.htm
+Organization Structures - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/cd/E18727_01/doc.121/e13542/T229841T229878.htm
+Oracle® Human Resources Management Systems, accessed March 15, 2026, https://docs.oracle.com/cd/E26401_01/doc.122/e59056.pdf
+WFM Events Mapping to Columns and Entities - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/fahbo/wfm-events-mapping-to-columns-and-entities.html
+Time and Labor and Project Costing Integration Setup - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/project-management/25b/oapfm/time-and-labor-and-project-costing-integration-setup.html
+Repeating Time Periods for Time Processing - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitp/repeating-time-periods-for-time-processing.html
+Basic Process to Integrate Global Payroll and Time and Labor - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/basic-process-to-integrate-global-payroll-and-time-and-labor.html
+Time Attestation Sets - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/25a/faitl/time-attestation-sets.html
+Set Up Attestations for Time and Labor - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitc/set-up-attestations-for-time-and-labor.html
+Worker Attestation Options - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/25a/faitl/worker-attestation-options.html
+Unified Time Card Setup Tasks - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitc/unified-time-card-setup-tasks.html
+Oracle Fusion Cloud Human Resources, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/implementing-time-and-labor.pdf
+Load Time Record Events in the Time Repository - Oracle, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/fautl/load-time-record-events-in-the-time-repository.html
+Set Up Project Costing for Use with Time and Labor - Oracle, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/human-resources/faitl/set-up-project-costing-for-use-with-time-and-labor.html
+How Time and Labor Works with Project Costing - Oracle Help Center, accessed March 15, 2026, https://docs.oracle.com/en/cloud/saas/project-management/25b/oapjc/how-time-and-labor-works-with-project-costing.html
+Oracle® Human Resources Management Systems, accessed March 15, 2026, https://docs.oracle.com/cd/E79783_09/current/acrobat/122payusug.pdf

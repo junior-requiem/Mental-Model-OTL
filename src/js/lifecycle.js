@@ -52,7 +52,12 @@ nodes.forEach((node, i) => {
 
   const sameRow = current.y === next.y;
   if (sameRow) {
-    drawEdge(svg, { x: current.x + cardWidth / 2, y: current.y }, { x: next.x - cardWidth / 2, y: next.y });
+    const horizontalDirection = next.x >= current.x ? 1 : -1;
+    drawEdge(
+      svg,
+      { x: current.x + (cardWidth / 2) * horizontalDirection, y: current.y },
+      { x: next.x - (cardWidth / 2) * horizontalDirection, y: next.y }
+    );
     return;
   }
 

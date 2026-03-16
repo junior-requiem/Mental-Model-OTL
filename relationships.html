@@ -6,7 +6,7 @@
     <title>OTL Relationship Map</title>
     <link rel="stylesheet" href="src/css/styles.css" />
   </head>
-  <body data-page="relationships">
+  <body data-page="relationships" class="diagram-page">
     <header class="hero">
       <div class="hero-title-row">
         <h1>Relationship Map</h1>
@@ -21,8 +21,8 @@
       </nav>
     </header>
 
-    <main>
-      <section class="panel controls">
+    <main class="diagram-main">
+      <section class="panel controls diagram-toolbar">
         <label for="node-search">Find an object</label>
         <input id="node-search" type="search" placeholder="Type relationship node..." />
         <button id="clear-search" type="button">Clear</button>
@@ -31,23 +31,22 @@
         <button id="zoom-reset" type="button">Reset</button>
         <span id="zoom-value" class="zoom-value">100%</span>
         <button id="tour-next" type="button">Next Guided Step</button>
-        <button id="toggle-focus" type="button" aria-pressed="false">Full Screen Mode</button>
         <a href="relationship-map-test.html" class="tab">Open Test Page</a>
       </section>
 
-      <section class="panel filter-row" aria-label="Layer filters">
+      <section class="panel filter-row diagram-filters" aria-label="Layer filters">
         <button type="button" data-filter-group="all" class="active">All</button>
         <button type="button" data-filter-group="runtime">Experience</button>
         <button type="button" data-filter-group="setup">Policy</button>
         <button type="button" data-filter-group="consumer">Consumer</button>
       </section>
 
-      <section class="panel split">
+      <section class="panel diagram-stage">
         <div class="diagram-wrap scrollable" id="relationship-viewport">
-          <svg id="relationship-svg" class="diagram" viewBox="0 0 2100 920" aria-label="OTL relationship map"></svg>
+          <svg id="relationship-svg" class="diagram" viewBox="0 0 2100 1080" aria-label="OTL relationship map"></svg>
           <div id="tooltip" class="tooltip"></div>
         </div>
-        <article id="object-detail" class="detail"></article>
+        <article id="object-detail" class="detail floating-detail"></article>
       </section>
     </main>
 

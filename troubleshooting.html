@@ -6,7 +6,7 @@
     <title>OTL Troubleshooting Tree</title>
     <link rel="stylesheet" href="src/css/styles.css" />
   </head>
-  <body data-page="troubleshooting">
+  <body data-page="troubleshooting" class="diagram-page">
     <header class="hero">
       <div class="hero-title-row">
         <h1>Troubleshooting Decision Tree</h1>
@@ -21,21 +21,20 @@
       </nav>
     </header>
 
-    <main>
-      <section class="panel controls">
+    <main class="diagram-main">
+      <section class="panel controls diagram-toolbar">
         <label for="node-search">Find a checkpoint</label>
         <input id="node-search" type="search" placeholder="Type troubleshooting item..." />
         <button id="clear-search" type="button">Clear</button>
         <button id="tour-next" type="button">Next Guided Step</button>
-        <button id="toggle-focus" type="button" aria-pressed="false">Full Screen Mode</button>
       </section>
 
-      <section class="panel split">
+      <section class="panel diagram-stage">
         <div class="diagram-wrap scrollable">
           <svg id="troubleshoot-svg" class="diagram" viewBox="0 0 920 1700" aria-label="OTL troubleshooting tree"></svg>
           <div id="tooltip" class="tooltip"></div>
         </div>
-        <article id="object-detail" class="detail"></article>
+        <article id="object-detail" class="detail floating-detail"></article>
       </section>
     </main>
 

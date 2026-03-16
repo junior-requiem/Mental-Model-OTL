@@ -6,7 +6,7 @@
     <title>OTL Architecture Diagram</title>
     <link rel="stylesheet" href="src/css/styles.css" />
   </head>
-  <body data-page="architecture">
+  <body data-page="architecture" class="diagram-page">
     <header class="hero">
       <div class="hero-title-row">
         <h1>Architecture: Setup / Runtime / Consumers</h1>
@@ -21,21 +21,27 @@
       </nav>
     </header>
 
-    <main>
-      <section class="panel controls">
+    <main class="diagram-main">
+      <section class="panel controls diagram-toolbar">
         <label for="node-search">Find a node</label>
         <input id="node-search" type="search" placeholder="Type node name..." />
         <button id="clear-search" type="button">Clear</button>
         <button id="tour-next" type="button">Next Guided Step</button>
-        <button id="toggle-focus" type="button" aria-pressed="false">Full Screen Mode</button>
       </section>
 
-      <section class="panel split">
+      <section class="panel filter-row architecture-focus-row" aria-label="Architecture focus views">
+        <button type="button" data-architecture-view="full" class="active">Whole Map</button>
+        <button type="button" data-architecture-view="setup">Setup</button>
+        <button type="button" data-architecture-view="runtime">Runtime</button>
+        <button type="button" data-architecture-view="consumer">Consumers</button>
+      </section>
+
+      <section class="panel diagram-stage">
         <div class="diagram-wrap scrollable">
           <svg id="architecture-svg" class="diagram" viewBox="0 0 1000 1200" aria-label="OTL architecture diagram"></svg>
           <div id="tooltip" class="tooltip" role="status" aria-live="polite"></div>
         </div>
-        <article id="object-detail" class="detail"></article>
+        <article id="object-detail" class="detail floating-detail"></article>
       </section>
     </main>
 
